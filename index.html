@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -152,7 +151,7 @@
                         </div>
                     </div>
 
-                    <!-- 頁2: 公差名單 (已修正大標題方塊圖示) -->
+                    <!-- 頁2: 公差名單 -->
                     <div class="slide-page space-y-4">
                         <div v-for="group in [
                             {n:'幹部', i:'fa-solid fa-crown', c:'text-purple-600 bg-purple-50'},
@@ -160,10 +159,8 @@
                             {n:'第二小隊', i:'fa-solid fa-kit-medical', c:'text-red-600 bg-red-50'},
                             {n:'第三小隊', i:'fa-solid fa-ambulance', c:'text-blue-600 bg-blue-50'}
                         ]" :key="group.n" class="list-card mt-2">
-                            <!-- 橫幅標題區 -->
                             <div class="p-4 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c">
                                 <span class="flex items-center">
-                                    <!-- 修正：確保圖示在方塊內顯示 -->
                                     <div class="mr-3 w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm">
                                         <i :class="group.i" class="text-xs"></i>
                                     </div>
@@ -171,7 +168,6 @@
                                 </span>
                                 <span class="bg-white/60 px-3 py-1 rounded-full text-[11px] shadow-sm">{{ getGroupTotal(group.n) }} 次</span>
                             </div>
-                            <!-- 名單內容 -->
                             <div class="p-2 grid grid-cols-2 gap-1">
                                 <div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl transition-colors" :class="m.姓名===userData.姓名?'bg-blue-50 border border-blue-100':'bg-white'">
                                     <div class="flex flex-col">
@@ -186,26 +182,25 @@
                             </div>
                         </div>
                     </div>
-<!-- 頁3: 獎章榮譽 -->
-<div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
-    <div v-for="medal in medalList" :key="medal.id" 
-         class="list-card p-4 flex flex-col items-center text-center transition-all duration-300 min-h-[140px] justify-center" 
-         :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md opacity-100' : 'opacity-20 grayscale bg-slate-50 border-slate-200'">
-        
-        <!-- 獎章圖示 -->
-        <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-2 text-2xl">
-            <i :class="medal.icon"></i>
-        </div>
-        
-        <!-- 獎章名字 -->
-        <p class="text-[12px] font-black text-slate-800 leading-tight mb-1">{{ medal.name }}</p>
-        
-        <!-- 獲獎年份文字 (改用輔助函式抓取數值) -->
-        <p class="text-[10px] font-bold" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">
-            {{ hasMedal(medal.id) ? findMedalValue(medal.id) : '尚未獲得' }}
-        </p>
-    </div>
-</div>
+
+                    <!-- 頁3: 獎章榮譽 (強化模糊搜尋與名字顯示) -->
+                    <div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
+                        <div v-for="medal in medalList" :key="medal.id" 
+                             class="list-card p-4 flex flex-col items-center text-center transition-all duration-300 min-h-[140px] justify-center" 
+                             :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md opacity-100' : 'opacity-20 grayscale bg-slate-50 border-slate-200'">
+                            
+                            <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-2 text-2xl">
+                                <i :class="medal.icon"></i>
+                            </div>
+                            
+                            <p class="text-[12px] font-black text-slate-800 leading-tight mb-1">{{ medal.name }}</p>
+                            
+                            <p class="text-[10px] font-bold" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">
+                                {{ hasMedal(medal.id) ? findMedalValue(medal.id) : '尚未獲得' }}
+                            </p>
+                        </div>
+                    </div>
+
                     <!-- 頁4: 協勤時數 -->
                     <div class="slide-page pt-2">
                         <div class="list-card p-8 text-center bg-indigo-50/30 mt-2">
@@ -275,22 +270,21 @@
                 { id:'money',  name:'零用金',   icon:'fa-solid fa-dollar-sign', activeClass:'bg-emerald-600 text-white shadow-md', textColor:'text-emerald-600' }
             ];
             const caseTypes = ['OHCA','PUA:OHCA','車禍','急病','一般受傷','自殺','路倒','心肌梗塞MI','中風CVA','打架受傷','電梯','救出人數'];
-         // 1. 確保 ID 與 Firebase 欄位名稱 (medal_ 後面的文字) 完全一致
-const medalList = [
-    { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
-    { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
-    { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
-    { name: '衛福部-金', id: '衛福部 金', icon: 'fa-solid fa-certificate text-yellow-500' },
-    { name: '衛福部-銀', id: '衛福部 銀', icon: 'fa-solid fa-certificate text-slate-400' },
-    { name: '衛福部-銅', id: '衛福部 銅', icon: 'fa-solid fa-certificate text-amber-700' },
-    { name: '內政部-金', id: '內政部 金', icon: 'fa-solid fa-award text-yellow-500' },
-    { name: '內政部-銀', id: '內政部 銀', icon: 'fa-solid fa-award text-slate-400' },
-    { name: '內政部-銅', id: '內政部 銅', icon: 'fa-solid fa-award text-amber-700' },
-    { name: '新北市-金', id: '新北市 金', icon: 'fa-solid fa-shield-halved text-yellow-500' },
-    { name: '新北市-銀', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
-    { name: '新北市-銅', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
-];
-
+            
+            const medalList = [
+                { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
+                { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
+                { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
+                { name: '衛福部-金', id: '衛福部 金', icon: 'fa-solid fa-certificate text-yellow-500' },
+                { name: '衛福部-銀', id: '衛福部 銀', icon: 'fa-solid fa-certificate text-slate-400' },
+                { name: '衛福部-銅', id: '衛福部 銅', icon: 'fa-solid fa-certificate text-amber-700' },
+                { name: '內政部-金', id: '內政部 金', icon: 'fa-solid fa-award text-yellow-500' },
+                { name: '內政部-銀', id: '內政部 銀', icon: 'fa-solid fa-award text-slate-400' },
+                { name: '內政部-銅', id: '內政部 銅', icon: 'fa-solid fa-award text-amber-700' },
+                { name: '新北市-金', id: '新北市 金', icon: 'fa-solid fa-shield-halved text-yellow-500' },
+                { name: '新北市-銀', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
+                { name: '新北市-銅', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
+            ];
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
@@ -325,17 +319,28 @@ const medalList = [
             const logout         = () => { currPage.value='login'; loginUserName.value=''; };
             const filterByGroup  = (g) => { const p={'分隊長':1,'副分隊長':2,'幹事':3,'助理幹事':4,'小隊長':5,'副小隊長':6,'隊員':7}; return members.value.filter(m=>m.duty_group===g).sort((a,b)=>(p[a.duty_title]||99)-(p[b.duty_title]||99)); };
             const getGroupTotal  = (g) => filterByGroup(g).reduce((s,m)=>s+(Number(m.duty_count)||0),0);
-          
-const hasMedal = (medalId) => {
-    const val = findMedalValue(medalId);
-    return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
-};
+            
+            // 模糊搜尋與獎章判斷邏輯
+            const findMedalValue = (id) => {
+                if (!userData.value || Object.keys(userData.value).length === 0) return null;
+                const keys = Object.keys(userData.value);
+                // 移除所有空格後比對關鍵字
+                const cleanId = id.replace(/\s+/g, '');
+                const foundKey = keys.find(k => k.startsWith('medal_') && k.replace(/\s+/g, '').includes(cleanId));
+                return foundKey ? userData.value[foundKey] : null;
+            };
+
+            const hasMedal = (medalId) => {
+                const val = findMedalValue(medalId);
+                return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
+            };
+
             const getHourLevel   = () => { const h=Number(cleanValue(userData.value['協勤時數'])); return h>1000?'資深隊員':h>500?'中堅隊員':'救護先鋒'; };
             const calculateMoney = () => Number(userData.value['出勤次數']||0)*200;
 
             return {
                 currPage, activeDashboardTab, cardsExpanded, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider,
-                handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, hasMedal, getHourLevel, calculateMoney, onSliderScroll, scrollToPage, toggleCards, onHandleTouchStart, onHandleTouchEnd
+                handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, hasMedal, findMedalValue, getHourLevel, calculateMoney, onSliderScroll, scrollToPage, toggleCards, onHandleTouchStart, onHandleTouchEnd
             };
         }
     }).mount('#app');
