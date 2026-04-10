@@ -103,29 +103,34 @@
             <!-- A. 卡片區（可收合） -->
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="horizontal-scroll px-6 mb-2">
+                    <!-- 卡片 1 -->
                     <div class="bank-card bg-card-blue">
                         <div class="flex justify-between items-start mb-2 opacity-80 text-xs font-bold uppercase tracking-widest">年度累計協勤 <i class="fa-solid fa-chart-line text-lg"></i></div>
                         <div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-black tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3><span class="text-sm font-bold opacity-80">小時</span></div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-4">
-                            <div><p class="text-[10px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-lg font-bold">{{ userData['出勤次數'] || 0 }}</p></div>
-                            <div><p class="text-[10px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-lg font-bold">{{ cleanValue(userData['救出人數']) }} <span class="text-xs font-normal">人</span></p></div>
-                            <div><p class="text-[10px] opacity-60 font-bold uppercase mb-1">年資</p><p class="text-base font-bold">{{ userData['seniority'] || '--' }}</p></div>
+                        <div class="grid grid-cols-3 border-t border-white/20 pt-4">
+                            <div class="border-r border-white/10"><p class="text-[10px] opacity-60 font-bold uppercase mb-1">出勤次數</p><p class="text-base font-bold">{{ userData['出勤次數'] || 0 }}</p></div>
+                            <div class="pl-4 border-r border-white/10"><p class="text-[10px] opacity-60 font-bold uppercase mb-1">救出人數</p><p class="text-base font-bold">{{ cleanValue(userData['救出人數']) }}</p></div>
+                            <div class="pl-4"><p class="text-[10px] opacity-60 font-bold uppercase mb-1">年資</p><p class="text-base font-bold">{{ userData['seniority'] || '--' }}</p></div>
                         </div>
                     </div>
+                    <!-- 卡片 2 -->
                     <div class="bank-card bg-card-emerald">
                         <div class="flex justify-between items-start mb-2 opacity-80 text-xs font-bold uppercase tracking-widest">志工榮譽卡 <i class="fa-solid fa-id-badge text-lg"></i></div>
                         <div class="mb-6 mt-2"><h3 class="text-2xl font-black">{{ userData['姓名'] }}</h3><p class="text-[10px] bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1 font-bold">剩餘 {{ calculateDays(userData['honor_expiry']) }} 天</p></div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-4">
-                            <div><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">到期日</p><p class="text-sm font-bold font-mono">{{ userData['honor_expiry'] || '----/--/--' }}</p></div>
-                            <div><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">總時數</p><p class="text-sm font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }}</p></div>
+                        <div class="grid grid-cols-3 border-t border-white/20 pt-4">
+                            <div class="col-span-1 border-r border-white/10"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">到期日</p><p class="text-base font-bold font-mono">{{ userData['honor_expiry']?.split('/')[1] + '/' + userData['honor_expiry']?.split('/')[2] || '--' }}</p></div>
+                            <div class="col-span-1 pl-4 border-r border-white/10"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">總時數</p><p class="text-base font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }}</p></div>
+                            <div class="col-span-1 pl-4"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">狀態</p><p class="text-base font-bold">有效</p></div>
                         </div>
                     </div>
+                    <!-- 卡片 3 -->
                     <div class="bank-card bg-card-rose mr-6">
                         <div class="flex justify-between items-start mb-2 opacity-80 text-xs font-bold uppercase tracking-widest">EMT 證照 <i class="fa-solid fa-file-medical text-lg"></i></div>
                         <div class="mb-6 mt-3"><h3 class="text-2xl font-black tracking-tighter">{{ userData['emt_level'] || '技術員' }}</h3><span class="bg-white text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm">有效</span></div>
-                        <div class="flex justify-between items-center border-t border-white/20 pt-4">
-                            <div><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">單位</p><p class="text-sm font-bold">消防局</p></div>
-                            <div class="text-right"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">到期日</p><p class="text-sm font-bold">{{ userData['emt_expiry'] || '----/--/--' }}</p></div>
+                        <div class="grid grid-cols-3 border-t border-white/20 pt-4">
+                            <div class="col-span-1 border-r border-white/10"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">單位</p><p class="text-base font-bold">消防局</p></div>
+                            <div class="col-span-1 pl-4 border-r border-white/10"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">到期日</p><p class="text-base font-bold font-mono">{{ userData['emt_expiry']?.split('/')[1] + '/' + userData['emt_expiry']?.split('/')[2] || '--' }}</p></div>
+                            <div class="col-span-1 pl-4"><p class="text-[10px] opacity-60 font-bold mb-1 uppercase">證號</p><p class="text-base font-bold">有</p></div>
                         </div>
                     </div>
                 </div>
@@ -133,11 +138,7 @@
 
             <!-- B. Tab 選單 + 把手 -->
             <div class="tabs-section">
-                <!-- 把手：上滑收合、下滑展開、點擊切換 -->
-                <div class="drag-handle"
-                     @click="toggleCards"
-                     @touchstart.passive="onHandleTouchStart"
-                     @touchend.passive="onHandleTouchEnd">
+                <div class="drag-handle" @click="toggleCards" @touchstart.passive="onHandleTouchStart" @touchend.passive="onHandleTouchEnd">
                     <div class="drag-handle-bar"></div>
                     <i class="fa-solid fa-chevron-up collapse-arrow" :class="cardsExpanded ? 'up' : 'down'"></i>
                 </div>
@@ -156,6 +157,7 @@
             <div class="slides-section">
                 <div class="content-slider" ref="slider" @scroll="onSliderScroll">
 
+                    <!-- 年度統計 -->
                     <div class="slide-page">
                         <div class="list-card mt-2">
                             <div v-for="type in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0">
@@ -168,18 +170,26 @@
                         </div>
                     </div>
 
+                    <!-- 公差名單 (加上圖示與 "次") -->
                     <div class="slide-page space-y-4">
                         <div v-for="group in [{n:'幹部',i:'fa-crown',c:'text-purple-600 bg-purple-50'},{n:'第一小隊',i:'fa-1',c:'text-orange-600 bg-orange-50'},{n:'第二小隊',i:'fa-2',c:'text-red-600 bg-red-50'},{n:'第三小隊',i:'fa-3',c:'text-blue-600 bg-blue-50'}]" :key="group.n" class="list-card mt-2">
-                            <div class="p-4 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c"><span><i :class="['fa-solid',group.i]" class="mr-2"></i>{{ group.n }}</span><span>{{ getGroupTotal(group.n) }}</span></div>
+                            <div class="p-4 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c"><span><i :class="['fa-solid',group.i]" class="mr-2"></i>{{ group.n }}</span><span>{{ getGroupTotal(group.n) }} 次</span></div>
                             <div class="p-2 grid grid-cols-2 gap-1">
                                 <div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl" :class="m.姓名===userData.姓名?'bg-cyan-50 border border-cyan-100':''">
-                                    <div class="flex flex-col"><span class="text-sm font-bold">{{ m.姓名 }}</span><span class="text-[9px] font-bold opacity-40">{{ m.duty_title||'隊員' }}</span></div>
-                                    <span class="text-sm font-black text-slate-700">{{ m.duty_count||0 }}</span>
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-bold flex items-center">
+                                            <i class="fa-solid fa-user-tag text-[10px] mr-1.5 opacity-40"></i>
+                                            {{ m.姓名 }}
+                                        </span>
+                                        <span class="text-[9px] font-bold opacity-40 ml-4">{{ m.duty_title||'隊員' }}</span>
+                                    </div>
+                                    <span class="text-sm font-black text-slate-700">{{ m.duty_count||0 }} <span class="text-[10px] font-bold opacity-40">次</span></span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    <!-- 獎章榮譽 -->
                     <div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
                         <div v-for="medal in medalList" :key="medal.name" class="list-card p-5 flex flex-col items-center text-center" :class="hasMedal(medal.target)?'bg-amber-50 border-amber-100':'opacity-30 grayscale'">
                             <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 text-2xl"><i :class="medal.icon"></i></div>
@@ -188,6 +198,7 @@
                         </div>
                     </div>
 
+                    <!-- 協勤時數 -->
                     <div class="slide-page pt-2">
                         <div class="list-card p-8 text-center bg-indigo-50/30 mt-2">
                             <div class="w-24 h-24 mx-auto border-[10px] border-indigo-500 rounded-full flex flex-col items-center justify-center mb-4 bg-white shadow-sm"><span class="text-2xl font-black text-indigo-600">{{ cleanValue(userData['協勤時數']) }}</span><span class="text-[9px] font-bold text-indigo-300">TOTAL HR</span></div>
@@ -199,6 +210,7 @@
                         </div>
                     </div>
 
+                    <!-- 零用金 -->
                     <div class="slide-page pt-2">
                         <div class="list-card p-6 text-center bg-emerald-50/20 mt-2">
                             <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-black">預估零用金</h4><i class="fa-solid fa-sack-dollar text-2xl text-emerald-500"></i></div>
@@ -217,6 +229,7 @@
             <div class="list-card p-12 text-center text-slate-300"><i class="fa-solid fa-clipboard-check text-6xl mb-4 opacity-10"></i><p class="text-sm font-bold">目前尚無派遣任務</p></div>
         </div>
 
+        <!-- 導覽列 -->
         <nav :style="{paddingBottom:'var(--safe-bottom)',height:'calc(75px + var(--safe-bottom))'}" class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 flex justify-around items-center px-2 z-50">
             <div @click="currPage='dashboard';scrollToPage(0)" :class="currPage==='dashboard'?'text-blue-600':'text-slate-300'" class="flex flex-col items-center flex-1"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
             <div class="flex flex-col items-center flex-1 text-slate-200"><i class="fa-solid fa-calendar-days text-xl"></i><span class="text-[13px] font-black mt-1">排班</span></div>
@@ -252,9 +265,8 @@
             const onHandleTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
             const onHandleTouchEnd   = (e) => {
                 const dy = e.changedTouches[0].clientY - touchStartY;
-                if (dy < -18)      cardsExpanded.value = false;  // 上滑 → 收合
-                else if (dy > 18)  cardsExpanded.value = true;   // 下滑 → 展開
-                // 小幅移動 → 交給 @click 的 toggleCards
+                if (dy < -18)      cardsExpanded.value = false;
+                else if (dy > 18)  cardsExpanded.value = true;
             };
             const toggleCards = () => { cardsExpanded.value = !cardsExpanded.value; };
 
