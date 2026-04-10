@@ -187,30 +187,31 @@
                         </div>
                     </div>
 
-                    <!-- 頁3: 獎章榮譽 -->
+                   <!-- 頁3: 獎章榮譽 -->
 <div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
-    <!-- 遍歷所有獎章 -->
     <div v-for="medal in medalList" :key="medal.id" 
          class="list-card p-4 flex flex-col items-center text-center transition-all duration-300 min-h-[140px] justify-center" 
-         :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md' : 'opacity-20 grayscale bg-slate-50 border-transparent'">
+         :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md' : 'opacity-20 grayscale bg-slate-50'">
         
-        <!-- 獎章圖示方塊 -->
+        <!-- 獎章圖示 -->
         <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-3 text-3xl">
             <i :class="medal.icon"></i>
         </div>
         
-        <!-- 獎章名字 -->
+        <!-- 獎章名字 (這行確保名字會出來) -->
         <p class="text-[12px] font-black text-slate-800 leading-tight mb-1">{{ medal.name }}</p>
         
-        <!-- 獲獎年份/狀態 -->
-        <div class="px-2 py-0.5 rounded-full bg-slate-100/50">
-            <p class="text-[10px] font-bold" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">
-                {{ hasMedal(medal.id) ? userData['medal_' + medal.id] : '尚未獲得' }}
+        <!-- 獲獎年份 -->
+        <div v-if="hasMedal(medal.id)" class="px-2 py-0.5 rounded-full bg-amber-50">
+            <p class="text-[10px] font-bold text-amber-600">
+                {{ userData['medal_' + medal.id] }}
             </p>
+        </div>
+        <div v-else>
+            <p class="text-[10px] font-bold text-slate-400 italic">尚未獲得</p>
         </div>
     </div>
 </div>
-
                     <!-- 頁4: 協勤時數 -->
                     <div class="slide-page pt-2">
                         <div class="list-card p-8 text-center bg-indigo-50/30 mt-2">
@@ -280,7 +281,8 @@
                 { id:'money',  name:'零用金',   icon:'fa-solid fa-dollar-sign', activeClass:'bg-emerald-600 text-white shadow-md', textColor:'text-emerald-600' }
             ];
             const caseTypes = ['OHCA','PUA:OHCA','車禍','急病','一般受傷','自殺','路倒','心肌梗塞MI','中風CVA','打架受傷','電梯','救出人數'];
-           const medalList = [
+         // 1. 確保 ID 與 Firebase 欄位名稱 (medal_ 後面的文字) 完全一致
+const medalList = [
     { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
     { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
     { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
@@ -294,6 +296,17 @@
     { name: '新北市-銀', id: '新北市 銀-1200H', icon: 'fa-solid fa-shield-halved text-slate-400' },
     { name: '新北市-銅', id: '新北市 銅-600H', icon: 'fa-solid fa-shield-halved text-amber-700' }
 ];
+
+// 2. 強化版判斷邏輯：會自動處理空格問題
+const hasMedal = (medalId) => {
+    // 取得所有以 medal_ 開頭的 key
+    const allKeys = Object.keys(userData.value);
+    const targetKey = 'medal_' + medalId;
+    
+    // 檢查是否存在這個 key，且內容不是空字串
+    const val = userData.value[targetKey];
+    return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
+};
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
