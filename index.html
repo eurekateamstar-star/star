@@ -23,7 +23,7 @@
             margin: 0;
             -webkit-font-smoothing: antialiased;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
-            font-size: 16px; /* 基準字體下調 */
+            font-size: 16px; 
         }
 
         #app {
@@ -47,7 +47,7 @@
         .siren-blue { flex: 1; animation: led-breath-blue 2.5s ease-in-out infinite; }
         .fixed-siren { position: fixed; top: 0; left: 0; z-index: 100; height: 6px; }
 
-        /* 2. 登入卡片 */
+        /* 2. 登入卡片 (已移除燈條) */
         .login-card { 
             background: #ffffff; 
             border: 1px solid rgba(226, 232, 240, 0.5); 
@@ -66,7 +66,6 @@
             padding-bottom: 20px;
         }
 
-        /* 元素微調 */
         .med-input { background: #f8fafc !important; border: 1px solid #cbd5e1 !important; border-radius: 16px; font-size: 15px; font-weight: 600; }
         .med-btn { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 16px; font-weight: 800; font-size: 17px; }
         
@@ -86,7 +85,7 @@
 </head>
 <body>
     <div id="app">
-        <!-- 頂部呼吸燈 -->
+        <!-- 頂部呼吸燈 (僅在主畫面顯示，融合瀏海區) -->
         <div v-if="currPage !== 'login'" class="siren-bar fixed-siren">
             <div class="siren-red"></div><div class="siren-blue"></div>
         </div>
@@ -94,11 +93,9 @@
         <!-- 1. 登入頁面 -->
         <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in">
             <div class="login-card w-full text-center">
-                <!-- 帶弧度的呼吸燈 -->
-                <div class="siren-bar"><div class="siren-red"></div><div class="siren-blue"></div></div>
-                
+                <!-- 已移除登入卡片內部的呼吸燈條 -->
                 <div class="p-8 py-12">
-                    <div class="w-16 h-16 mx-auto bg-blue-50 rounded-full flex items-center justify-center border border-blue-200 mb-6">
+                    <div class="w-16 h-16 mx-auto bg-blue-50 rounded-full flex items-center justify-center border border-blue-200 mb-6 shadow-sm">
                         <i class="fa-solid fa-star-of-life text-3xl text-blue-600"></i>
                     </div>
                     <h1 class="text-3xl font-black text-slate-800 mb-1">HAISHAN EMS</h1>
@@ -118,9 +115,9 @@
             <div class="mt-8 text-center text-[10px] text-slate-400 font-medium tracking-widest uppercase">海山救護義消智慧平台 © 2024</div>
         </div>
 
-        <!-- 2. 主畫面 -->
+        <!-- 2. 主畫面 (登入後) -->
         <template v-else>
-            <header class="pt-6 pb-4 px-8 flex justify-between items-center bg-[#f1f5f9]">
+            <header class="pt-6 pb-4 px-8 flex justify-between items-center">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">
                         {{ userData.姓名 ? userData.姓名.charAt(0) : 'E' }}
@@ -149,7 +146,7 @@
                         </div>
                     </div>
 
-                    <!-- 卡片 2: 志工 -->
+                    <!-- 卡片 2: 志工榮譽卡 -->
                     <div class="bank-card bg-card-emerald">
                         <p class="text-xs font-bold opacity-80 uppercase tracking-widest">志工榮譽卡</p>
                         <h3 class="text-2xl font-black my-4 tracking-wide">{{ userData['姓名'] }}</h3>
@@ -162,7 +159,7 @@
                         </div>
                     </div>
 
-                    <!-- 卡片 3: EMT -->
+                    <!-- 卡片 3: EMT 證照 -->
                     <div class="bank-card bg-card-rose mr-8">
                         <p class="text-xs font-bold opacity-80 uppercase tracking-widest">EMT 救護證照</p>
                         <h3 class="text-2xl font-black my-5 tracking-tight">{{ userData['emt_level'] || '救護技術員' }}</h3>
@@ -186,7 +183,7 @@
                 </div>
 
                 <!-- 下方數據 -->
-                <div class="px-8">
+                <div class="px-8 mt-2">
                     <div v-if="activeTab === 'stats'" class="fade-in list-card">
                         <div v-for="type in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-50 last:border-0">
                             <span class="text-sm font-bold text-slate-700">{{ type }}</span>
@@ -211,15 +208,15 @@
             </main>
 
             <!-- 底部導覽 -->
-            <nav class="h-20 bg-white/95 backdrop-blur-xl border-t border-slate-200 flex justify-around items-center px-10 pb-6 shadow-[0_-5px_15px_rgba(0,0,0,0.02)]">
+            <nav class="h-20 bg-white/95 backdrop-blur-xl border-t border-slate-200 flex justify-around items-center px-10 pb-8 shadow-[0_-5px_15px_rgba(0,0,0,0.02)]">
                 <div @click="activeTab = 'stats'" :class="activeTab === 'stats' ? 'text-blue-600' : 'text-slate-400'" class="flex flex-col items-center">
-                    <i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[10px] font-bold mt-1">首頁</span>
+                    <i class="fa-solid fa-house-chimney text-2xl"></i><span class="text-[10px] font-bold mt-1.5">首頁</span>
                 </div>
                 <div @click="activeTab = 'duty'" :class="activeTab === 'duty' ? 'text-blue-600' : 'text-slate-400'" class="flex flex-col items-center">
-                    <i class="fa-solid fa-clipboard-user text-xl"></i><span class="text-[10px] font-bold mt-1">公差</span>
+                    <i class="fa-solid fa-clipboard-user text-2xl"></i><span class="text-[10px] font-bold mt-1.5">公差</span>
                 </div>
-                <div class="flex flex-col items-center text-slate-300"><i class="fa-solid fa-calendar-check text-xl"></i><span class="text-[10px] font-bold mt-1">排班</span></div>
-                <div class="flex flex-col items-center text-slate-300"><i class="fa-solid fa-user-nurse text-xl"></i><span class="text-[10px] font-bold mt-1">我的</span></div>
+                <div class="flex flex-col items-center text-slate-300"><i class="fa-solid fa-calendar-check text-2xl"></i><span class="text-[10px] font-bold mt-1.5">排班</span></div>
+                <div class="flex flex-col items-center text-slate-300"><i class="fa-solid fa-user-nurse text-2xl"></i><span class="text-[10px] font-bold mt-1.5">我的</span></div>
             </nav>
         </template>
     </div>
@@ -273,7 +270,7 @@
                 };
 
                 const cleanValue = (val) => val ? String(val).replace(/[^0-9.]/g, '') : '0';
-                const logout = () => { currPage.value = 'login'; loginForm.value.pass = ''; };
+                const logout = () => { currPage.value = 'login'; loginForm.value.pass = ''; userData.value = {}; };
                 const filterByGroup = (g) => members.value.filter(m => m.duty_group === g);
                 const getGroupTotal = (g) => filterByGroup(g).reduce((s, m) => s + (Number(m.duty_count) || 0), 0);
                 const totalPublicDuty = computed(() => members.value.reduce((s, m) => s + (Number(m.duty_count) || 0), 0));
