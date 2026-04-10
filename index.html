@@ -188,17 +188,26 @@
                     </div>
 
                     <!-- 頁3: 獎章榮譽 -->
-                   <div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
+<div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
+    <!-- 遍歷所有獎章 -->
     <div v-for="medal in medalList" :key="medal.id" 
-         class="list-card p-5 flex flex-col items-center text-center transition-all duration-300" 
-         :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md' : 'opacity-20 grayscale bg-slate-100'">
-        <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 text-2xl">
+         class="list-card p-4 flex flex-col items-center text-center transition-all duration-300 min-h-[140px] justify-center" 
+         :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md' : 'opacity-20 grayscale bg-slate-50 border-transparent'">
+        
+        <!-- 獎章圖示方塊 -->
+        <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-3 text-3xl">
             <i :class="medal.icon"></i>
         </div>
-        <p class="text-[11px] font-black text-slate-700">{{ medal.name }}</p>
-        <p class="text-[10px] font-bold text-amber-600 mt-1">
-            {{ hasMedal(medal.id) ? userData['medal_' + medal.id] : '-' }}
-        </p>
+        
+        <!-- 獎章名字 -->
+        <p class="text-[12px] font-black text-slate-800 leading-tight mb-1">{{ medal.name }}</p>
+        
+        <!-- 獲獎年份/狀態 -->
+        <div class="px-2 py-0.5 rounded-full bg-slate-100/50">
+            <p class="text-[10px] font-bold" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">
+                {{ hasMedal(medal.id) ? userData['medal_' + medal.id] : '尚未獲得' }}
+            </p>
+        </div>
     </div>
 </div>
 
@@ -276,13 +285,13 @@
     { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
     { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
     { name: '衛福部-金', id: '衛福部 金-8000H', icon: 'fa-solid fa-certificate text-yellow-500' },
-    { name: '衛福部-銀', id: '衛福部 銀-5000H', icon: 'fa-solid fa-certificate text-slate-300' },
+    { name: '衛福部-銀', id: '衛福部 銀-5000H', icon: 'fa-solid fa-certificate text-slate-400' },
     { name: '衛福部-銅', id: '衛福部 銅-3000H', icon: 'fa-solid fa-certificate text-amber-700' },
     { name: '內政部-金', id: '內政部 金-2500H', icon: 'fa-solid fa-award text-yellow-500' },
-    { name: '內政部-銀', id: '內政部 銀-2000H', icon: 'fa-solid fa-award text-slate-300' },
+    { name: '內政部-銀', id: '內政部 銀-2000H', icon: 'fa-solid fa-award text-slate-400' },
     { name: '內政部-銅', id: '內政部 銅-1500H', icon: 'fa-solid fa-award text-amber-700' },
     { name: '新北市-金', id: '新北市 金-1800H', icon: 'fa-solid fa-shield-halved text-yellow-500' },
-    { name: '新北市-銀', id: '新北市 銀-1200H', icon: 'fa-solid fa-shield-halved text-slate-300' },
+    { name: '新北市-銀', id: '新北市 銀-1200H', icon: 'fa-solid fa-shield-halved text-slate-400' },
     { name: '新北市-銅', id: '新北市 銅-600H', icon: 'fa-solid fa-shield-halved text-amber-700' }
 ];
 
