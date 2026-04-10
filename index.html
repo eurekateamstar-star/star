@@ -187,21 +187,21 @@
                         </div>
                     </div>
 
-                   <!-- 頁3: 獎章榮譽 -->
+                  <!-- 頁3: 獎章榮譽 -->
 <div class="slide-page grid grid-cols-2 gap-3 content-start pt-2">
     <div v-for="medal in medalList" :key="medal.id" 
          class="list-card p-4 flex flex-col items-center text-center transition-all duration-300 min-h-[140px] justify-center" 
-         :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md' : 'opacity-20 grayscale bg-slate-50'">
+         :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-md opacity-100' : 'opacity-20 grayscale bg-slate-50 border-slate-200'">
         
         <!-- 獎章圖示 -->
-        <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-3 text-3xl">
+        <div class="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm mb-2 text-2xl">
             <i :class="medal.icon"></i>
         </div>
         
-        <!-- 獎章名字 (這行很重要) -->
+        <!-- 獎章名字 (這行確保名字一定會出現) -->
         <p class="text-[12px] font-black text-slate-800 leading-tight mb-1">{{ medal.name }}</p>
         
-        <!-- 獲獎年份 -->
+        <!-- 獲獎年份文字 -->
         <p class="text-[10px] font-bold" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">
             {{ hasMedal(medal.id) ? userData['medal_' + medal.id] : '尚未獲得' }}
         </p>
@@ -281,7 +281,7 @@ const medalList = [
     { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
     { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
     { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
-    { name: '衛福部-金', id: '衛福部 金- 8000H', icon: 'fa-solid fa-certificate text-yellow-500' }, // 注意這裡有空格
+    { name: '衛福部-金', id: '衛福部 金- 8000H', icon: 'fa-solid fa-certificate text-yellow-500' },
     { name: '衛福部-銀', id: '衛福部 銀-5000H', icon: 'fa-solid fa-certificate text-slate-400' },
     { name: '衛福部-銅', id: '衛福部 銅-3000H', icon: 'fa-solid fa-certificate text-amber-700' },
     { name: '內政部-金', id: '內政部 金-2500H', icon: 'fa-solid fa-award text-yellow-500' },
@@ -327,10 +327,8 @@ const medalList = [
             const logout         = () => { currPage.value='login'; loginUserName.value=''; };
             const filterByGroup  = (g) => { const p={'分隊長':1,'副分隊長':2,'幹事':3,'助理幹事':4,'小隊長':5,'副小隊長':6,'隊員':7}; return members.value.filter(m=>m.duty_group===g).sort((a,b)=>(p[a.duty_title]||99)-(p[b.duty_title]||99)); };
             const getGroupTotal  = (g) => filterByGroup(g).reduce((s,m)=>s+(Number(m.duty_count)||0),0);
-           const hasMedal = (medalId) => {
-    // 這裡會抓取像 "medal_內政部 銀-2000H" 這樣的欄位
+          const hasMedal = (medalId) => {
     const val = userData.value['medal_' + medalId];
-    // 判斷：值存在、不是空字串、不是純空格、不是"無"
     return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
 };
             const getHourLevel   = () => { const h=Number(cleanValue(userData.value['協勤時數'])); return h>1000?'資深隊員':h>500?'中堅隊員':'救護先鋒'; };
