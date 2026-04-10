@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>海山救護義消平台</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { 
+            margin: 0; background: #f8fafc; color: #1e293b; 
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        #app {
+            width: 100%; max-width: 450px; height: 100vh; background: #f1f5f9;
+            position: relative; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.08);
+        }
+
+        /* 🚨 LED 紅藍呼吸燈 */
+        @keyframes led-breath-red { 0%, 100% { background: rgba(239, 68, 68, 0.4); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); } 50% { background: rgba(239, 68, 68, 1); box-shadow: 0 0 15px rgba(239, 68, 68, 0.8), 0 0 30px rgba(239, 68, 68, 0.4); } }
+        @keyframes led-breath-blue { 0%, 100% { background: rgba(59, 130, 246, 1); box-shadow: 0 0 15px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.4); } 50% { background: rgba(59, 130, 246, 0.4); box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); } }
+        .siren-bar { height: 6px; width: 100%; display: flex; position: absolute; top: 0; left: 0; border-radius: 24px 24px 0 0; z-index: 10; }
+        .siren-red { flex: 1; animation: led-breath-red 2.5s ease-in-out infinite; border-top-left-radius: 24px; }
+        .siren-blue { flex: 1; animation: led-breath-blue 2.5s ease-in-out infinite; border-top-right-radius: 24px; }
+
+        /* 網銀 UI 基礎 */
+        .login-card { background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.5); box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15), inset 0 2px 4px rgba(255,255,255,0.5); position: relative; }
+        .list-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); overflow: hidden; }
+        
+        .med-input { background: #f8fafc !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; outline: none; border-radius: 16px; font-size: 15px; font-weight: 600; transition: all 0.3s ease; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); }
+        .med-input:focus { background: #ffffff !important; border-color: #3b82f6 !important; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+        .med-btn { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255,255,255,0.2); color: white; border-radius: 16px; font-weight: 800; border: 1px solid #1d4ed8; }
+        .med-btn:active { transform: scale(0.97); }
+
+        /* 🌟 橫向滑動容器 (支援卡片與按鈕) */
+        .horizontal-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; padding-bottom: 12px; scrollbar-width: none; }
+        .horizontal-scroll::-webkit-scrollbar { display: none; }
+        
+        /* 頂部大卡片樣式 */
+        .bank-card { flex: 0 0 88%; scroll-snap-align: center; margin-right: 12px; border-radius: 24px; color: white; position: relative; overflow: hidden; padding: 24px; }
+        .bank-card::after { content: ''; position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent); transform: rotate(30deg); pointer-events: none; }
+        .bg-card-blue { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.4); }
+        .bg-card-purple { background: linear-gradient(135deg, #4c1d95 0%, #8b5cf6 100%); box-shadow: 0 15px 30px -5px rgba(139, 92, 246, 0.4); }
+        .bg-card-emerald { background: linear-gradient(135deg, #064e3b 0%, #10b981 100%); box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.4); }
+
+        /* 中間快捷按鈕樣式 */
+        .scroll-item { flex: 0 0 auto; width: 76px; scroll-snap-align: start; }
+        
+        .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="app">
+
+        <!-- 1. 登入頁面 (維持專業白與上方 LED) -->
+        <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in relative z-20">
+            <div class="login-card rounded-[32px] w-full text-center relative z-10 mx-auto max-w-[360px]">
+                <div class="siren-bar"><div class="siren-red"></div><div class="siren-blue"></div></div>
+                <div class="p-10 pt-12 pb-12">
+                    <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-50 to-blue-100 rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(59,130,246,0.15)] border border-blue-200 mb-6">
+                        <i class="fa-solid fa-star-of-life text-3xl text-blue-600"></i>
+                    </div>
+                    <div class="mb-10">
+                        <h1 class="text-3xl font-black tracking-tight text-slate-800 mb-1">HAISHAN EMS</h1>
+                        <p class="text-[10px] text-blue-600 font-bold tracking-[0.25em] uppercase">Volunteer Platform</p>
+                    </div>
+                    <div class="space-y-5 text-left">
+                        <div class="relative">
+                            <i class="fa-solid fa-user-nurse absolute left-4 top-4 text-slate-400 text-sm"></i>
+                            <select v-model="loginForm.name" class="med-input w-full p-4 pl-12 appearance-none">
+                                <option value="" disabled>請選擇救護人員</option>
+                                <option v-for="m in members" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option>
+                            </select>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-shield-halved absolute left-4 top-4 text-slate-400 text-sm"></i>
+                            <input v-model="loginForm.pass" type="password" placeholder="請輸入安全密碼" class="med-input w-full p-4 pl-12">
+                        </div>
+                        <button @click="handleLogin" class="med-btn w-full py-4 mt-8 transition-all text-base uppercase">Secure Login</button>
+                        <p v-if="errMsg" class="text-red-500 text-xs text-center mt-4 font-bold">{{ errMsg }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 登入後頂部 (精簡網銀風) -->
+        <header v-if="currPage !== 'login'" class="pt-12 pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] z-50">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">
+                    {{ userData.姓名 ? userData.姓名.charAt(0) : 'E' }}
+                </div>
+                <div>
+                    <p class="text-[10px] text-slate-400 font-bold tracking-wider uppercase mb-0.5">Welcome Back</p>
+                    <h2 class="text-lg font-black tracking-tight text-slate-800">{{ userData.姓名 }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle">隊員</span></h2>
+                </div>
+            </div>
+            <button @click="logout" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 hover:text-red-500 transition shadow-sm border border-slate-200">
+                <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+            </button>
+        </header>
+
+        <!-- 2. 主儀表板 (網銀首頁風) -->
+        <main v-if="currPage === 'dashboard'" class="flex-1 overflow-y-auto no-scrollbar pb-32 fade-in">
+            
+            <!-- A. 頂部橫向滑動資產卡片區 (Card Carousel) -->
+            <div class="horizontal-scroll px-6 mt-2 mb-4">
+                
+                <!-- 卡片 1：年度出勤總覽 (藍色) -->
+                <div class="bank-card bg-card-blue">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">年度累計協勤</p>
+                        <i class="fa-brands fa-nfc-symbol text-white/50 text-xl"></i>
+                    </div>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <h3 class="text-5xl font-black tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3>
+                        <span class="text-sm font-bold text-white/80">小時</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-white/20 pt-4">
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">出勤次數</p><p class="text-lg font-bold">{{ userData['出勤次數'] || 0 }} <span class="text-xs font-normal opacity-80">次</span></p></div>
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">救出人數</p><p class="text-lg font-bold">{{ cleanValue(userData['救出人數']) }} <span class="text-xs font-normal opacity-80">人</span></p></div>
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">服務年資</p><p class="text-lg font-bold">10<span class="text-xs font-normal opacity-80">年</span>3<span class="text-xs font-normal opacity-80">月</span></p></div>
+                    </div>
+                </div>
+
+                <!-- 卡片 2：歷年協勤時數 (紫色) -->
+                <div class="bank-card bg-card-purple">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">歷年總協勤時數</p>
+                        <i class="fa-solid fa-clock-rotate-left text-white/50 text-xl"></i>
+                    </div>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <h3 class="text-5xl font-black tracking-tighter">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }}</h3>
+                        <span class="text-sm font-bold text-white/80">小時</span>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-white/20 pt-4">
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">初階 EMT</p><p class="text-lg font-bold">500 <span class="text-xs font-normal opacity-80">小時</span></p></div>
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">中階 EMT2</p><p class="text-lg font-bold">2000 <span class="text-xs font-normal opacity-80">小時</span></p></div>
+                    </div>
+                </div>
+
+                <!-- 卡片 3：零用金帳戶 (綠色) -->
+                <div class="bank-card bg-card-emerald mr-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-white/80 text-xs font-bold tracking-widest uppercase">零用金結餘</p>
+                        <i class="fa-solid fa-wallet text-white/50 text-xl"></i>
+                    </div>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-2xl font-bold text-white/80 mb-1">NT$</span>
+                        <h3 class="text-5xl font-black tracking-tighter">4,500</h3>
+                    </div>
+                    <div class="flex justify-between items-center border-t border-white/20 pt-4">
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">本月入帳</p><p class="text-lg font-bold">+1,200</p></div>
+                        <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">本月扣款</p><p class="text-lg font-bold">-300</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B. 橫向滑動選單 (Quick Actions - 點擊切換下方內容) -->
+            <div class="horizontal-scroll px-6 gap-3 mb-2 pt-2">
+                <!-- 按鈕：年度統計 -->
+                <div @click="activeTab = 'stats'" class="scroll-item flex flex-col items-center cursor-pointer transition">
+                    <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border flex items-center justify-center mb-2 transition-all" 
+                         :class="activeTab === 'stats' ? 'border-blue-500 text-blue-600 bg-blue-50/50 shadow-blue-500/20' : 'border-slate-200 text-slate-400'">
+                        <i class="fa-solid fa-chart-pie text-2xl"></i>
+                    </div>
+                    <span class="text-[11px] font-bold" :class="activeTab === 'stats' ? 'text-blue-600' : 'text-slate-500'">年度統計</span>
+                </div>
+                <!-- 按鈕：公差統計 -->
+                <div @click="activeTab = 'duty'" class="scroll-item flex flex-col items-center cursor-pointer transition">
+                    <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border flex items-center justify-center mb-2 transition-all" 
+                         :class="activeTab === 'duty' ? 'border-cyan-500 text-cyan-600 bg-cyan-50/50 shadow-cyan-500/20' : 'border-slate-200 text-slate-400'">
+                        <i class="fa-solid fa-clipboard-user text-2xl"></i>
+                    </div>
+                    <span class="text-[11px] font-bold" :class="activeTab === 'duty' ? 'text-cyan-600' : 'text-slate-500'">公差名單</span>
+                </div>
+                <!-- 其他未啟用按鈕 -->
+                <div v-for="item in menuList" :key="item.name" class="scroll-item flex flex-col items-center opacity-50">
+                    <div class="w-14 h-14 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-slate-400 mb-2">
+                        <i :class="item.icon" class="text-2xl"></i>
+                    </div>
+                    <span class="text-[11px] font-bold text-slate-500">{{ item.name }}</span>
+                </div>
+            </div>
+
+            <!-- ==========================================
+                 C. 下方資料區 (根據點擊的 Tab 動態切換)
+            ========================================== -->
+            <div class="px-6 relative">
+                
+                <!-- Tab 1: 年度統計 (案件明細清單) -->
+                <div v-if="activeTab === 'stats'" class="fade-in">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-black text-slate-800">案件分類明細</h3>
+                        <span class="text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-md border border-blue-200">本年度</span>
+                    </div>
+                    <div class="list-card">
+                        <div v-for="(type, index) in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500" :class="userData[type] > 0 ? 'bg-blue-50 text-blue-500' : ''">
+                                    <i class="fa-solid fa-file-medical"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-700">{{ type }}</p>
+                                    <p class="text-[10px] text-slate-400 font-medium">救護勤務</p>
+                                </div>
+                            </div>
+                            <p class="text-lg font-black" :class="userData[type] > 0 ? 'text-blue-600' : 'text-slate-300'">{{ userData[type] || 0 }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: 公差統計 (分組清單) -->
+                <div v-if="activeTab === 'duty'" class="fade-in space-y-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-base font-black text-slate-800">全隊公差總覽</h3>
+                        <span class="text-[10px] font-bold text-cyan-600 bg-cyan-100 px-2 py-1 rounded-md border border-cyan-200">總計 {{ totalPublicDuty }} 次</span>
+                    </div>
+                    
+                    <div v-for="group in [{n:'幹部', c:'bg-purple-50 text-purple-700 border-purple-200'}, {n:'第一小隊', c:'bg-orange-50 text-orange-700 border-orange-200'}, {n:'第二小隊', c:'bg-red-50 text-red-700 border-red-200'}, {n:'第三小隊', c:'bg-blue-50 text-blue-700 border-blue-200'}]" :key="group.n" class="list-card">
+                        <div class="p-3 px-4 flex justify-between items-center border-b border-slate-100" :class="group.c">
+                            <span class="text-sm font-black">{{ group.n }}組</span>
+                            <span class="bg-white/80 px-2 py-0.5 rounded-full text-xs font-black shadow-sm">{{ getGroupTotal(group.n) }}</span>
+                        </div>
+                        <div class="p-1">
+                            <div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl text-sm transition-colors" :class="m.姓名 === loginForm.name ? 'bg-cyan-50' : 'hover:bg-slate-50'">
+                                <div class="flex gap-4 items-center">
+                                    <span class="text-[10px] font-bold text-slate-400 w-10 truncate">{{ m.duty_title || '隊員' }}</span>
+                                    <span class="font-bold" :class="m.姓名 === loginForm.name ? 'text-cyan-600' : 'text-slate-700'">{{ m.姓名 }}</span>
+                                </div>
+                                <span class="font-black" :class="m.duty_count > 0 ? 'text-slate-800' : 'text-slate-300'">{{ m.duty_count || 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- 5. 底部固定導覽列 (純淨白) -->
+        <nav v-if="currPage !== 'login'" class="absolute bottom-0 left-0 right-0 h-20 bg-white/95 backdrop-blur-xl border-t border-slate-200 flex justify-around items-center px-8 pb-4 z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
+            <div @click="currPage = 'dashboard'" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-400'" class="flex flex-col items-center cursor-pointer transition">
+                <i class="fa-solid fa-house-chimney text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">首頁</span>
+            </div>
+            <div class="flex flex-col items-center text-slate-400 opacity-50"><i class="fa-solid fa-calendar-check text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">排班</span></div>
+            <div class="flex flex-col items-center text-slate-400 opacity-50"><i class="fa-solid fa-user-nurse text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">我的</span></div>
+            <div class="flex flex-col items-center text-slate-400 opacity-50"><i class="fa-solid fa-gear text-xl mb-1"></i><span class="text-[10px] font-bold mt-0.5">設定</span></div>
+        </nav>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzxANy8mkN8BzsGr0SDvGLW_AJ43kRQ1Q",
+            authDomain: "star-c5e91.firebaseapp.com",
+            projectId: "star-c5e91",
+            storageBucket: "star-c5e91.firebasestorage.app",
+            messagingSenderId: "804810488246",
+            appId: "1:804810488246:web:477340ff049b90ed68e917"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const { createApp, ref, computed, onMounted } = Vue;
+
+        createApp({
+            setup() {
+                const currPage = ref('login');
+                const activeTab = ref('stats'); 
+                const members = ref([]);
+                const loginForm = ref({ name: '', pass: '' });
+                const userData = ref({});
+                const errMsg = ref('');
+
+                const caseTypes = ['OHCA','PUA:OHCA','車禍','急病','一般受傷','自殺','路倒','心肌梗塞MI','中風CVA','打架受傷','電梯'];
+                const menuList = [
+                    { name: '志工卡', icon: 'fa-solid fa-id-badge' },
+                    { name: 'EMT證照', icon: 'fa-solid fa-file-medical' },
+                    { name: '獎章榮譽', icon: 'fa-solid fa-medal' }
+                ];
+
+                onMounted(() => {
+                    onSnapshot(collection(db, "members"), (snap) => {
+                        members.value = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+                            .sort((a,b) => a.姓名.localeCompare(b.姓名, 'zh-Hant'));
+                    });
+                });
+
+                const handleLogin = () => {
+                    errMsg.value = "";
+                    const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
+                    if (user) { userData.value = user; currPage.value = 'dashboard'; activeTab.value = 'stats'; }
+                    else { errMsg.value = "密碼錯誤，請重新輸入"; }
+                };
+
+                const cleanValue = (val) => val ? String(val).replace(/[^0-9.]/g, '') : '0';
+                const logout = () => { loginForm.value.pass = ""; currPage.value = 'login'; };
+                
+                const filterByGroup = (g) => members.value.filter(m => m.duty_group === g);
+                const getGroupTotal = (g) => filterByGroup(g).reduce((s, m) => s + (Number(m.duty_count) || 0), 0);
+                const totalPublicDuty = computed(() => members.value.reduce((s, m) => s + (Number(m.duty_count) || 0), 0));
+
+                return { currPage, activeTab, members, loginForm, userData, errMsg, caseTypes, menuList, handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, totalPublicDuty };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
