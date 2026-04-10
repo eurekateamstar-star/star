@@ -37,34 +37,36 @@
         .med-input { background: #f8fafc !important; color: #1e293b !important; border: 1px solid #cbd5e1 !important; outline: none; border-radius: 16px; font-size: 15px; font-weight: 600; }
         .med-btn { background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 16px; font-weight: 800; border: 1px solid #1d4ed8; }
 
-        /* 內容區結構設定 */
-        .scrollable-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* 📱 滑動頁面容器 */
-        .page-slider {
-            flex: 1; display: flex; 
-            overflow-x: auto; scroll-snap-type: x mandatory;
-            -webkit-overflow-scrolling: touch; scrollbar-width: none;
+        /* 📱 核心結構：全域垂直捲動 */
+        .main-scroll-view {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; padding-bottom: 120px;
         }
-        .page-slider::-webkit-scrollbar { display: none; }
+        .main-scroll-view::-webkit-scrollbar { display: none; }
+
+        /* 📱 水平滑動內容頁面 */
+        .content-slider {
+            display: flex; overflow-x: auto; 
+            scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+            width: 100%; min-height: 450px;
+        }
+        .content-slider::-webkit-scrollbar { display: none; }
         .slide-page {
-            flex: 0 0 100%; width: 100%; height: 100%;
-            scroll-snap-align: start; padding: 0 24px 100px 24px;
-            overflow-y: auto;
+            flex: 0 0 100%; width: 100%;
+            scroll-snap-align: start; padding: 0 24px;
         }
 
         .horizontal-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .horizontal-scroll::-webkit-scrollbar { display: none; }
 
-        .bank-card { flex: 0 0 88%; scroll-snap-align: center; margin-right: 12px; border-radius: 24px; color: white; position: relative; overflow: hidden; padding: 24px; min-height: 180px; }
+        .bank-card { flex: 0 0 88%; scroll-snap-align: center; margin-right: 12px; border-radius: 24px; color: white; position: relative; overflow: hidden; padding: 24px; min-height: 190px; }
         .bank-card::after { content: ''; position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent); transform: rotate(30deg); pointer-events: none; }
 
-        .bg-card-blue { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.4); }
-        .bg-card-emerald { background: linear-gradient(135deg, #065f46 0%, #10b981 100%); box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.4); }
-        .bg-card-rose { background: linear-gradient(135deg, #be123c 0%, #f43f5e 100%); box-shadow: 0 15px 30px -5px rgba(244, 63, 94, 0.4); }
+        .bg-card-blue { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); }
+        .bg-card-emerald { background: linear-gradient(135deg, #065f46 0%, #10b981 100%); }
+        .bg-card-rose { background: linear-gradient(135deg, #be123c 0%, #f43f5e 100%); }
 
         .list-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02); overflow: hidden; }
-
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -76,7 +78,7 @@
         <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in relative z-20">
             <div class="login-card rounded-[32px] w-full text-center mx-auto max-w-[360px]">
                 <div class="siren-bar"><div class="siren-red"></div><div class="siren-blue"></div></div>
-                <div class="p-10 pt-12 pb-12">
+                <div class="p-10 pt-12 pb-12 text-center">
                     <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-50 to-blue-100 rounded-full flex items-center justify-center shadow-lg border border-blue-200 mb-6">
                         <i class="fa-solid fa-star-of-life text-3xl text-blue-600"></i>
                     </div>
@@ -87,25 +89,27 @@
                     <div class="space-y-5 text-left">
                         <div class="relative">
                             <i class="fa-solid fa-user-nurse absolute left-4 top-4 text-slate-400"></i>
-                            <select v-model="loginForm.name" class="med-input w-full p-4 pl-12 appearance-none">
+                            <select v-model="loginForm.name" class="med-input w-full p-4 pl-12 appearance-none text-slate-700">
                                 <option value="" disabled>請選擇救護人員</option>
                                 <option v-for="m in members" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option>
                             </select>
                         </div>
                         <div class="relative">
                             <i class="fa-solid fa-shield-halved absolute left-4 top-4 text-slate-400"></i>
-                            <input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 pl-12">
+                            <input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 pl-12 font-bold">
                         </div>
                         <button @click="handleLogin" class="med-btn w-full py-4 mt-8 transition-all uppercase">Secure Login</button>
-                        <p v-if="errMsg" class="text-red-600 text-sm text-center mt-4 font-black"><i class="fa-solid fa-circle-exclamation"></i> {{ errMsg }}</p>
+                        <p v-if="errMsg" class="text-red-600 text-sm text-center mt-4 font-black fade-in"><i class="fa-solid fa-triangle-exclamation"></i> {{ errMsg }}</p>
                     </div>
                 </div>
             </div>
+            <div class="mt-8 text-center text-[10px] text-slate-400 font-medium tracking-widest uppercase">海山救護義消智慧平台 © 2024</div>
         </div>
 
-        <!-- 2. 登入後內容 -->
+        <!-- 2. 登入後儀表板 -->
         <template v-else>
-            <header :style="{ paddingTop: 'calc(2.5rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0">
+            <!-- 固定頂部 Header -->
+            <header :style="{ paddingTop: 'calc(2.5rem + var(--safe-top))' }" class="pb-4 px-6 flex justify-between items-center bg-[#f1f5f9] shrink-0 z-50">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-600 text-lg font-black shadow-sm border border-slate-200">{{ userData.姓名?.charAt(0) }}</div>
                     <div>
@@ -116,9 +120,12 @@
                 <button @click="logout" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-200"><i class="fa-solid fa-power-off text-sm"></i></button>
             </header>
 
-            <div class="scrollable-content">
-                <!-- A. 固定卡片區 -->
+            <!-- 📱 全域垂直捲動區 -->
+            <main class="main-scroll-view fade-in">
+                
+                <!-- A. 卡片區 (隨捲動往上移) -->
                 <div class="horizontal-scroll px-6 mt-2 mb-4 shrink-0">
+                    <!-- 年度卡片 -->
                     <div class="bank-card bg-card-blue">
                         <div class="flex justify-between items-start mb-2"><p class="text-white/80 text-xs font-bold uppercase tracking-widest">年度累計協勤</p><i class="fa-solid fa-chart-line text-white/50 text-xl"></i></div>
                         <div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-black tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3><span class="text-sm font-bold text-white/80">小時</span></div>
@@ -128,21 +135,34 @@
                             <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">年資</p><p class="text-base font-bold">{{ userData['seniority'] || '--' }}</p></div>
                         </div>
                     </div>
+                    <!-- 榮譽卡 -->
                     <div class="bank-card bg-card-emerald">
                         <div class="flex justify-between items-start mb-2"><p class="text-white/80 text-xs font-bold uppercase tracking-widest">志工榮譽卡</p><i class="fa-solid fa-id-badge text-white/50 text-xl"></i></div>
                         <div class="mb-6 mt-2">
                             <h3 class="text-2xl font-black">{{ userData['姓名'] }}</h3>
-                            <p class="text-[10px] text-white font-bold bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1">剩餘 {{ calculateDays(userData['honor_expiry']) }} 天到期</p>
+                            <p class="text-[10px] text-white font-bold bg-black/20 px-2 py-0.5 rounded-full inline-block mt-1">剩餘 {{ calculateDays(userData['honor_expiry']) }} 天</p>
                         </div>
                         <div class="flex justify-between items-center border-t border-white/20 pt-4">
                             <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">到期日期</p><p class="text-sm font-bold font-mono">{{ userData['honor_expiry'] || '----/--/--' }}</p></div>
                             <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">總時數</p><p class="text-sm font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }}</p></div>
                         </div>
                     </div>
+                    <!-- EMT 證照 -->
+                    <div class="bank-card bg-card-rose mr-6">
+                        <div class="flex justify-between items-start mb-2"><p class="text-white/80 text-xs font-bold uppercase tracking-widest">EMT 救護證照</p><i class="fa-solid fa-file-medical text-white/50 text-xl"></i></div>
+                        <div class="mb-6 mt-3">
+                            <h3 class="text-2xl font-black tracking-tighter">{{ userData['emt_level'] || '技術員' }}</h3>
+                            <span class="bg-white text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full">有效</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-white/20 pt-4">
+                            <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">發證單位</p><p class="text-sm font-bold">消防局</p></div>
+                            <div class="text-right"><p class="text-[10px] text-white/60 font-bold uppercase mb-1">證照到期日</p><p class="text-sm font-bold">{{ userData['emt_expiry'] || '----/--/--' }}</p></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- B. 固定功能選單 -->
-                <div class="horizontal-scroll px-6 gap-3 mb-6 shrink-0">
+                <div class="horizontal-scroll px-6 gap-3 mb-6 shrink-0 z-10 sticky top-0 bg-[#f1f5f9] py-2">
                     <div v-for="(tab, index) in dashboardTabs" :key="tab.id" @click="scrollToPage(index)" class="flex flex-col items-center shrink-0">
                         <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 transition-all" 
                              :class="activeTab === tab.id ? tab.activeClass : 'bg-white text-slate-400 border border-slate-200'">
@@ -152,18 +172,20 @@
                     </div>
                 </div>
 
-                <!-- C. 📱 可滑動的內容頁面 -->
-                <div class="page-slider" ref="slider" @scroll="onSliderScroll">
+                <!-- C. 📱 水平滑動內容區 -->
+                <div class="content-slider" ref="slider" @scroll="onSliderScroll">
                     
                     <!-- 1. 年度統計 -->
                     <div class="slide-page">
-                        <div class="list-card fade-in">
-                            <div v-for="type in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0">
+                        <div class="list-card">
+                            <div v-for="type in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50">
                                 <div class="flex items-center gap-4">
                                     <div class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400" :class="userData[type] > 0 ? 'text-blue-500 bg-blue-50' : ''"><i class="fa-solid fa-kit-medical text-sm"></i></div>
                                     <p class="text-sm font-bold text-slate-700">{{ type }}</p>
                                 </div>
-                                <p class="text-lg font-black" :class="userData[type] > 0 ? 'text-blue-600' : 'text-slate-200'">{{ userData[type] || 0 }} <span v-if="type === '救出人數'" class="text-xs font-bold">人</span></p>
+                                <p class="text-lg font-black" :class="userData[type] > 0 ? 'text-blue-600' : 'text-slate-300'">
+                                    {{ userData[type] || 0 }} <span v-if="type === '救出人數' && userData[type] > 0" class="text-xs font-bold">人</span>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -189,53 +211,53 @@
                     <!-- 3. 獎章榮譽 -->
                     <div class="slide-page">
                         <div class="grid grid-cols-2 gap-3">
-                            <div v-for="medal in medalList" :key="medal.name" class="list-card p-4 flex flex-col items-center text-center" :class="hasMedal(medal.target) ? 'bg-orange-50 border-orange-100' : 'opacity-40 grayscale'">
-                                <div class="w-12 h-12 rounded-full flex items-center justify-center bg-white shadow-sm mb-2 text-2xl"><i :class="medal.icon"></i></div>
+                            <div v-for="medal in medalList" :key="medal.name" class="list-card p-5 flex flex-col items-center text-center" :class="hasMedal(medal.target) ? 'bg-amber-50 border-amber-100' : 'opacity-30 grayscale'">
+                                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 text-2xl"><i :class="medal.icon"></i></div>
                                 <p class="text-xs font-black text-slate-800">{{ medal.name }}</p>
-                                <p class="text-[9px] font-bold text-slate-400 mt-1">{{ medal.target }} HRS</p>
+                                <p class="text-[10px] font-bold text-amber-600 mt-1">{{ medal.target }} HRS</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- 4. 協勤時數詳情 -->
                     <div class="slide-page">
-                        <div class="list-card p-8 text-center">
-                            <div class="w-24 h-24 mx-auto border-8 border-indigo-500 rounded-full flex flex-col items-center justify-center mb-4 shadow-sm">
+                        <div class="list-card p-8 text-center bg-indigo-50/30">
+                            <div class="w-24 h-24 mx-auto border-[10px] border-indigo-500 rounded-full flex flex-col items-center justify-center mb-4 bg-white shadow-sm">
                                 <span class="text-2xl font-black text-indigo-600">{{ cleanValue(userData['協勤時數']) }}</span>
-                                <span class="text-[10px] font-bold text-indigo-400">總小時</span>
+                                <span class="text-[9px] font-bold text-indigo-400">TOTAL HR</span>
                             </div>
-                            <h4 class="text-lg font-black text-slate-800">當前級別：{{ getHourLevel() }}</h4>
+                            <h4 class="text-lg font-black text-slate-800">級別：{{ getHourLevel() }}</h4>
                             <div class="mt-8 space-y-4 text-left">
-                                <div class="flex justify-between text-sm font-bold"><span class="text-slate-400">年度進度</span><span>{{ cleanValue(userData['協勤時數']) }} / 250 HR</span></div>
-                                <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner"><div class="h-full bg-indigo-500 transition-all" :style="{ width: Math.min(100, (Number(cleanValue(userData['協勤時數']))/250)*100) + '%' }"></div></div>
+                                <div class="flex justify-between text-sm font-bold text-slate-500"><span>年度進度</span><span>{{ cleanValue(userData['協勤時數']) }} / 250 HRS</span></div>
+                                <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner"><div class="h-full bg-indigo-500 transition-all duration-1000" :style="{ width: Math.min(100, (Number(cleanValue(userData['協勤時數']))/250)*100) + '%' }"></div></div>
                             </div>
                         </div>
                     </div>
 
                     <!-- 5. 零用金 -->
                     <div class="slide-page">
-                        <div class="list-card p-6">
-                            <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-black text-slate-800">零用金估算</h4><i class="fa-solid fa-sack-dollar text-2xl text-emerald-500"></i></div>
-                            <div class="bg-emerald-50 rounded-[32px] p-8 text-center border border-emerald-100">
-                                <p class="text-[10px] text-emerald-600 font-black uppercase mb-1">年度累積獎金</p>
-                                <h3 class="text-4xl font-black text-emerald-700">NT$ {{ calculateMoney() }}</h3>
+                        <div class="list-card p-6 bg-emerald-50/20">
+                            <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-black text-slate-800">預估零用金</h4><i class="fa-solid fa-money-bill-trend-up text-2xl text-emerald-500"></i></div>
+                            <div class="bg-emerald-600 rounded-[32px] p-8 text-center shadow-lg">
+                                <p class="text-[11px] text-emerald-100 font-bold uppercase mb-1 tracking-widest">Accumulated Balance</p>
+                                <h3 class="text-4xl font-black text-white">$ {{ calculateMoney() }}</h3>
                             </div>
-                            <div class="mt-6 text-[10px] font-bold text-slate-400 leading-relaxed text-center px-4">計算說明：依據出勤次數預計核發<br>(年度總計，實際金額以大隊核發為準)</div>
+                            <p class="mt-6 text-[11px] font-bold text-slate-400 leading-relaxed text-center italic">計算參考：出勤次數 × 200元<br>(實際金額以大隊正式核發清冊為準)</p>
                         </div>
                     </div>
 
                 </div>
-            </div>
+            </main>
 
-            <!-- 📱 五鍵底部導航欄 -->
-            <nav :style="{ paddingBottom: 'var(--safe-bottom)', height: 'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center px-4 z-50">
-                <div @click="currPage = 'dashboard'; scrollToPage(0)" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-300'" class="flex flex-col items-center flex-1">
+            <!-- 📱 固定底部導航欄：字體 13px / font-black -->
+            <nav :style="{ paddingBottom: 'var(--safe-bottom)', height: 'calc(80px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center px-4 z-50">
+                <div @click="currPage = 'dashboard'; scrollToPage(0)" :class="activeTab === 'stats' ? 'text-blue-600' : 'text-slate-300'" class="flex flex-col items-center flex-1">
                     <i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span>
                 </div>
                 <div class="flex flex-col items-center flex-1 text-slate-200">
                     <i class="fa-solid fa-calendar-day text-xl"></i><span class="text-[13px] font-black mt-1">排班</span>
                 </div>
-                <div class="flex flex-col items-center flex-1 text-slate-200">
+                <div @click="scrollToPage(1)" :class="activeTab === 'duty' ? 'text-blue-600' : 'text-slate-300'" class="flex flex-col items-center flex-1">
                     <i class="fa-solid fa-clipboard-list text-xl"></i><span class="text-[13px] font-black mt-1">公差</span>
                 </div>
                 <div class="flex flex-col items-center flex-1 text-slate-200">
@@ -279,7 +301,7 @@
                 const dashboardTabs = [
                     { id: 'stats', name: '年度統計', icon: 'fa-solid fa-chart-pie', activeClass: 'bg-blue-600 text-white shadow-lg', textColor: 'text-blue-600' },
                     { id: 'duty', name: '公差名單', icon: 'fa-solid fa-clipboard-user', activeClass: 'bg-cyan-600 text-white shadow-lg', textColor: 'text-cyan-600' },
-                    { id: 'medals', name: '獎章榮譽', icon: 'fa-solid fa-medal', activeClass: 'bg-orange-500 text-white shadow-lg', textColor: 'text-orange-500' },
+                    { id: 'medals', name: '獎章榮譽', icon: 'fa-solid fa-medal', activeClass: 'bg-amber-500 text-white shadow-lg', textColor: 'text-amber-600' },
                     { id: 'hours', name: '協勤時數', icon: 'fa-solid fa-clock', activeClass: 'bg-indigo-600 text-white shadow-lg', textColor: 'text-indigo-600' },
                     { id: 'money', name: '零用金', icon: 'fa-solid fa-dollar-sign', activeClass: 'bg-emerald-600 text-white shadow-lg', textColor: 'text-emerald-600' },
                 ];
@@ -300,14 +322,12 @@
                     });
                 });
 
-                // 📱 處理滑動偵測
                 const onSliderScroll = () => {
                     if (!slider.value) return;
                     const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth);
-                    activeTab.value = dashboardTabs[index].id;
+                    if (dashboardTabs[index]) activeTab.value = dashboardTabs[index].id;
                 };
 
-                // 📱 點擊選單自動捲動
                 const scrollToPage = (index) => {
                     if (!slider.value) return;
                     slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior: 'smooth' });
