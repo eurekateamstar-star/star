@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* 完全保留您原本的樣式設定 */
         body { 
             margin: 0; background: #f8fafc; color: #1e293b; 
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -113,10 +114,12 @@
                         <i class="fa-solid fa-chart-line text-white/50 text-xl"></i>
                     </div>
                     <div class="flex items-baseline gap-1 mb-6">
+                        <!-- 修正：這裡會隨 Firebase 動態更新 -->
                         <h3 class="text-5xl font-black tracking-tighter">{{ cleanValue(userData['協勤時數']) }}</h3>
                         <span class="text-sm font-bold text-white/80">小時</span>
                     </div>
                     <div class="flex justify-between items-center border-t border-white/20 pt-4">
+                        <!-- 修正：這裡會隨 Firebase 動態更新 -->
                         <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">出勤次數</p><p class="text-lg font-bold">{{ userData['出勤次數'] || 0 }} <span class="text-xs font-normal opacity-80">次</span></p></div>
                         <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">救出人數</p><p class="text-lg font-bold">{{ cleanValue(userData['救出人數']) }} <span class="text-xs font-normal opacity-80">人</span></p></div>
                         <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">服務年資</p><p class="text-base font-bold">{{ userData['seniority'] || '--' }}</p></div>
@@ -266,13 +269,18 @@
                 const activeTab = ref('stats'); 
                 const members = ref([]);
                 const loginForm = ref({ name: '', pass: '' });
-                const userData = ref({});
+                const loginUserName = ref(''); // 紀錄目前登入的姓名
                 const errMsg = ref('');
                 const caseTypes = ['OHCA','PUA:OHCA','車禍','急病','一般受傷','自殺','路倒','心肌梗塞MI','中風CVA','打架受傷','電梯'];
                 const menuList = [
                     { name: '歷史紀錄', icon: 'fa-solid fa-clock-rotate-left' },
                     { name: '獎章榮譽', icon: 'fa-solid fa-medal' }
                 ];
+
+                // 核心改動：userData 變成 computed，讓它隨 members 數組更新而自動變化
+                const userData = computed(() => {
+                    return members.value.find(m => m.姓名 === loginUserName.value) || {};
+                });
 
                 onMounted(() => {
                     onSnapshot(collection(db, "members"), (snap) => {
@@ -292,12 +300,22 @@
 
                 const handleLogin = () => {
                     const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
-                    if (user) { userData.value = user; currPage.value = 'dashboard'; }
-                    else { errMsg.value = "密碼錯誤"; }
+                    if (user) { 
+                        loginUserName.value = user.姓名; // 記錄姓名
+                        currPage.value = 'dashboard'; 
+                        errMsg.value = '';
+                    } else { 
+                        errMsg.value = "密碼錯誤"; 
+                    }
                 };
 
-                const cleanValue = (val) => val ? String(val).replace(/[^0-9.]/g, '') : '0';
-                const logout = () => { currPage.value = 'login'; loginForm.value.pass = ''; };
+                // 優化提取數字的邏輯，避免顯示 undefined 或 NaN
+                const cleanValue = (val) => {
+                    if (val === undefined || val === null) return '0';
+                    return String(val).replace(/[^0-9.]/g, '') || '0';
+                };
+
+                const logout = () => { currPage.value = 'login'; loginForm.value.pass = ''; loginUserName.value = ''; };
                 const filterByGroup = (g) => members.value.filter(m => m.duty_group === g);
                 const getGroupTotal = (g) => filterByGroup(g).reduce((s, m) => s + (Number(m.duty_count) || 0), 0);
                 const totalPublicDuty = computed(() => members.value.reduce((s, m) => s + (Number(m.duty_count) || 0), 0));
