@@ -26,14 +26,14 @@
             background: #f1f5f9; box-shadow: 0 0 50px rgba(0, 0, 0, 0.08);
         }
 
-        /* 🚨 平滑呼吸感燈條 (交替律動) */
+        /* 🚨 平滑呼吸感燈條 */
         @keyframes siren-breath-red { 
-            0%, 100% { background: #ef4444; opacity: 0.3; box-shadow: none; } 
-            50% { background: #ff0000; opacity: 1; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); } 
+            0%, 100% { background: #ef4444; opacity: 0.3; } 
+            50% { background: #ff0000; opacity: 1; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); } 
         }
         @keyframes siren-breath-blue { 
-            0%, 100% { background: #3b82f6; opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.6); } 
-            50% { background: #2563eb; opacity: 0.3; box-shadow: none; } 
+            0%, 100% { background: #3b82f6; opacity: 1; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); } 
+            50% { background: #2563eb; opacity: 0.3; } 
         }
         .siren-bar { 
             height: 6px; width: 100%; 
@@ -59,9 +59,9 @@
         .horizontal-scroll { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
         .horizontal-scroll::-webkit-scrollbar { display: none; }
 
-        /* 卡片設計補回 */
-        .bank-card { flex: 0 0 88%; scroll-snap-align: center; margin-right: 12px; border-radius: 24px; color: white; position: relative; overflow: hidden; padding: 24px; }
-        .bank-card::after { content: ''; position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent); transform: rotate(30deg); pointer-events: none; }
+        /* 卡片漸層與反射效果 */
+        .bank-card { flex: 0 0 88%; scroll-snap-align: center; margin-right: 12px; border-radius: 24px; color: white; position: relative; overflow: hidden; padding: 24px; min-height: 180px; }
+        .bank-card::after { content: ''; position: absolute; top: 0; left: -50%; width: 200%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent); transform: rotate(30deg); pointer-events: none; }
 
         .bg-card-blue { background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); box-shadow: 0 15px 30px -5px rgba(59, 130, 246, 0.4); }
         .bg-card-emerald { background: linear-gradient(135deg, #065f46 0%, #10b981 100%); box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.4); }
@@ -79,7 +79,7 @@
         <!-- 1. 登入頁面 -->
         <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in relative z-20">
             <div class="login-card rounded-[32px] w-full text-center mx-auto max-w-[360px]">
-                <!-- 平滑呼吸感燈條 -->
+                <!-- 極細呼吸燈 -->
                 <div class="siren-bar"><div class="siren-red"></div><div class="siren-blue"></div></div>
                 <div class="p-10 pt-12 pb-12">
                     <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-50 to-blue-100 rounded-full flex items-center justify-center shadow-lg border border-blue-200 mb-6">
@@ -102,6 +102,11 @@
                             <input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 pl-12">
                         </div>
                         <button @click="handleLogin" class="med-btn w-full py-4 mt-8 transition-all uppercase">Secure Login</button>
+                        
+                        <!-- 修復：登入錯誤提示 -->
+                        <p v-if="errMsg" class="text-red-600 text-sm text-center mt-4 font-black fade-in">
+                            <i class="fa-solid fa-circle-exclamation mr-1"></i> {{ errMsg }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -120,14 +125,13 @@
                         <h2 class="text-lg font-black text-slate-800">{{ userData.姓名 }} <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full ml-1 align-middle">{{ userData['duty_title'] || '隊員' }}</span></h2>
                     </div>
                 </div>
-                <button @click="logout" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-200">
-                    <i class="fa-solid fa-power-off text-sm"></i>
-                </button>
+                <button @click="logout" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-200"><i class="fa-solid fa-power-off text-sm"></i></button>
             </header>
 
             <main class="scrollable-content fade-in">
-                <!-- A. 卡片區 (內容保持不變) -->
+                <!-- A. 卡片區 -->
                 <div class="horizontal-scroll px-6 mt-2 mb-4">
+                    <!-- 年度卡片 (藍色) -->
                     <div class="bank-card bg-card-blue">
                         <div class="flex justify-between items-start mb-2"><p class="text-white/80 text-xs font-bold uppercase tracking-widest">年度累計協勤</p><i class="fa-solid fa-chart-line text-white/50 text-xl"></i></div>
                         <div class="flex items-baseline gap-1 mb-6">
@@ -141,6 +145,7 @@
                         </div>
                     </div>
 
+                    <!-- 榮譽卡 (綠色) -->
                     <div class="bank-card bg-card-emerald">
                         <div class="flex justify-between items-start mb-2"><p class="text-white/80 text-xs font-bold uppercase tracking-widest">志工榮譽卡</p><i class="fa-solid fa-id-badge text-white/50 text-xl"></i></div>
                         <div class="mb-6 mt-2">
@@ -152,9 +157,22 @@
                             <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">累計時數</p><p class="text-sm font-bold">{{ Number(cleanValue(userData['協勤時數'])) + 2500 }}</p></div>
                         </div>
                     </div>
+
+                    <!-- 修復：EMT 證照卡片回歸 (紅色) -->
+                    <div class="bank-card bg-card-rose mr-6">
+                        <div class="flex justify-between items-start mb-2"><p class="text-white/80 text-xs font-bold uppercase tracking-widest">EMT 救護證照</p><i class="fa-solid fa-file-medical text-white/50 text-xl"></i></div>
+                        <div class="mb-6 mt-3">
+                            <h3 class="text-2xl font-black tracking-tighter">{{ userData['emt_level'] || '技術員' }}</h3>
+                            <span class="bg-white text-rose-600 text-[10px] font-bold px-2 py-0.5 rounded-full">有效</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-white/20 pt-4">
+                            <div><p class="text-[10px] text-white/60 font-bold uppercase mb-1">發證單位</p><p class="text-sm font-bold">消防局</p></div>
+                            <div class="text-right"><p class="text-[10px] text-white/60 font-bold uppercase mb-1">證照到期日</p><p class="text-lg font-bold">{{ userData['emt_expiry'] || '----/--/--' }}</p></div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- B. 功能切換 (內容保持不變) -->
+                <!-- B. 功能切換 -->
                 <div class="horizontal-scroll px-6 gap-3 mb-6">
                     <div @click="activeTab = 'stats'" class="flex flex-col items-center shrink-0">
                         <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2" :class="activeTab === 'stats' ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-slate-400 border border-slate-200'"><i class="fa-solid fa-chart-pie text-xl"></i></div>
@@ -166,8 +184,9 @@
                     </div>
                 </div>
 
-                <!-- C. 列表內容 (內容保持不變) -->
+                <!-- C. 內容區 -->
                 <div class="px-6 pb-24">
+                    <!-- 統計 -->
                     <div v-if="activeTab === 'stats'" class="list-card">
                         <div v-for="type in caseTypes" :key="type" class="flex justify-between items-center p-4 border-b border-slate-100 last:border-0 hover:bg-slate-50 transition">
                             <div class="flex items-center gap-4">
@@ -181,6 +200,7 @@
                         </div>
                     </div>
 
+                    <!-- 公差 -->
                     <div v-if="activeTab === 'duty'" class="space-y-4">
                         <div v-for="group in [{n:'幹部', i:'fa-crown', c:'text-purple-600 bg-purple-50'}, {n:'第一小隊', i:'fa-1', c:'text-orange-600 bg-orange-50'}, {n:'第二小隊', i:'fa-2', c:'text-red-600 bg-red-50'}, {n:'第三小隊', i:'fa-3', c:'text-blue-600 bg-blue-50'}]" :key="group.n" class="list-card">
                             <div class="p-4 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c">
@@ -201,29 +221,24 @@
                 </div>
             </main>
 
-            <!-- 📱 五鍵底部導航：13px / font-black / 更新按鈕 -->
+            <!-- 📱 五鍵導航：13px / font-black -->
             <nav :style="{ paddingBottom: 'var(--safe-bottom)', height: 'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center px-4 z-50">
-                <!-- 首頁 -->
                 <div @click="activeTab = 'stats'" :class="activeTab === 'stats' ? 'text-blue-600' : 'text-slate-300'" class="flex flex-col items-center flex-1">
                     <i class="fa-solid fa-house-chimney text-xl"></i>
                     <span class="text-[13px] font-black mt-1">首頁</span>
                 </div>
-                <!-- 排班 -->
                 <div class="flex flex-col items-center flex-1 text-slate-200">
                     <i class="fa-solid fa-calendar-day text-xl"></i>
                     <span class="text-[13px] font-black mt-1">排班</span>
                 </div>
-                <!-- 公差 -->
                 <div @click="activeTab = 'duty'" :class="activeTab === 'duty' ? 'text-blue-600' : 'text-slate-300'" class="flex flex-col items-center flex-1">
                     <i class="fa-solid fa-clipboard-list text-xl"></i>
                     <span class="text-[13px] font-black mt-1">公差</span>
                 </div>
-                <!-- 會議 -->
                 <div class="flex flex-col items-center flex-1 text-slate-200">
                     <i class="fa-solid fa-users text-xl"></i>
                     <span class="text-[13px] font-black mt-1">會議</span>
                 </div>
-                <!-- 我的 -->
                 <div class="flex flex-col items-center flex-1 text-slate-200">
                     <i class="fa-solid fa-user-nurse text-xl"></i>
                     <span class="text-[13px] font-black mt-1">我的</span>
@@ -270,8 +285,13 @@
 
                 const handleLogin = () => {
                     const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
-                    if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; errMsg.value = ''; }
-                    else { errMsg.value = "安全密碼錯誤"; }
+                    if (user) { 
+                        loginUserName.value = user.姓名; 
+                        currPage.value = 'dashboard'; 
+                        errMsg.value = ''; 
+                    } else { 
+                        errMsg.value = "安全密碼錯誤，請重新輸入"; 
+                    }
                 };
 
                 const calculateDays = (dateStr) => {
@@ -281,7 +301,7 @@
                 };
 
                 const cleanValue = (val) => val ? String(val).replace(/[^0-9.]/g, '') : '0';
-                const logout = () => { currPage.value = 'login'; loginUserName.value = ''; loginForm.value.pass = ''; };
+                const logout = () => { currPage.value = 'login'; loginUserName.value = ''; loginForm.value.pass = ''; errMsg.value = ''; };
 
                 const filterByGroup = (g) => {
                     const list = members.value.filter(m => m.duty_group === g);
