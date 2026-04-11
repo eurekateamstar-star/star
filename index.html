@@ -233,7 +233,7 @@
                         </div>
                     </div>
 
-                    <!-- 頁3: 獎章榮譽 -->
+                    <!-- 頁3: 獎章榮譽 (圖跟字已加大) -->
                     <div class="slide-page space-y-3 pt-2">
                         <div class="list-card bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
                             <div class="flex justify-between items-center mb-2">
@@ -245,11 +245,11 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-3 gap-2 pb-10">
-                            <div v-for="medal in medalList" :key="medal.id" class="list-card p-2 flex flex-col items-center text-center transition-all duration-500 relative" :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm opacity-100' : 'opacity-20 grayscale bg-slate-50'">
-                                <div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-[8px] text-white shadow-sm z-10"><i class="fa-solid fa-check"></i></div>
-                                <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-inner mb-1.5 text-xl"><i :class="medal.icon"></i></div>
-                                <p class="text-[10px] font-black text-slate-700 leading-tight h-6 flex items-center justify-center">{{ medal.name }}</p>
-                                <p class="text-[8px] font-bold mt-0.5" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">{{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}</p>
+                            <div v-for="medal in medalList" :key="medal.id" class="list-card p-2 py-4 flex flex-col items-center text-center transition-all duration-500 relative" :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm opacity-100' : 'opacity-20 grayscale bg-slate-50'">
+                                <div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm z-10"><i class="fa-solid fa-check"></i></div>
+                                <div class="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-inner mb-2 text-3xl"><i :class="medal.icon"></i></div>
+                                <p class="text-xs font-black text-slate-700 leading-tight h-8 flex items-center justify-center">{{ medal.name }}</p>
+                                <p class="text-[10px] font-bold mt-1" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">{{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}</p>
                             </div>
                         </div>
                     </div>
@@ -272,27 +272,27 @@
                         </div>
                     </div>
 
-                    <!-- 頁5: 協勤時數 (對應 Firebase 欄位 m1~m12) -->
+                    <!-- 頁5: 協勤時數 (名字已小一號) -->
                     <div class="slide-page pt-2">
                         <div class="mb-6 px-1">
                             <h3 class="text-xl font-black text-slate-800 leading-none mb-1">隊員協勤時數明細</h3>
                         </div>
 
-                        <!-- 資料列表 (照自定義排序) -->
+                        <!-- 資料列表 (名字縮至 text-lg) -->
                         <div class="space-y-4 pb-28">
                             <div v-for="m in sortedMembersList" :key="m.姓名" 
                                  class="list-card px-5 py-4 border transition-all"
                                  :class="m.姓名 === userData.姓名 ? 'bg-blue-600 border-blue-700 text-white ring-4 ring-blue-100 shadow-lg scale-[1.02] z-10' : 'bg-white border-slate-100'">
                                 
                                 <div class="flex items-center justify-between mb-4">
-                                    <span class="text-xl font-black">{{ m.姓名 }}</span>
+                                    <span class="text-lg font-black">{{ m.姓名 }}</span>
                                     <div class="text-right">
                                         <span class="text-xs font-bold uppercase opacity-60 mr-2">年度總計</span>
                                         <span class="text-2xl font-black leading-none" :class="m.姓名 === userData.姓名 ? 'text-white' : 'text-indigo-600'">{{ cleanValue(m['協勤時數']) }}</span>
                                     </div>
                                 </div>
 
-                                <!-- 橫向滑動月份數值 (對應欄位 m1, m2, ..., m12) -->
+                                <!-- 橫向滑動月份數值 -->
                                 <div class="horizontal-scroll pb-1">
                                     <div class="flex gap-6">
                                         <div v-for="i in 12" :key="i" class="flex flex-col items-center min-w-[28px]">
