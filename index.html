@@ -233,26 +233,29 @@
                         </div>
                     </div>
 
-                    <!-- 頁3: 獎章榮譽 (圖跟字已加大) -->
-                    <div class="slide-page space-y-3 pt-2">
-                        <div class="list-card bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
-                            <div class="flex justify-between items-center mb-2">
-                                <div><p class="text-[10px] opacity-80 font-bold tracking-wider uppercase">Achievement</p><h3 class="text-xl font-black">榮譽勳章統計</h3></div>
-                                <div class="text-right"><span class="text-3xl font-black">{{ medalCount }}</span><span class="text-xs opacity-80 ml-1">/ 12</span></div>
-                            </div>
-                            <div class="w-full h-1.5 bg-black/20 rounded-full overflow-hidden">
-                                <div class="h-full bg-white transition-all duration-1000" :style="{ width: (medalCount / 12 * 100) + '%' }"></div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 pb-10">
-                            <div v-for="medal in medalList" :key="medal.id" class="list-card p-2 py-4 flex flex-col items-center text-center transition-all duration-500 relative" :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm opacity-100' : 'opacity-20 grayscale bg-slate-50'">
-                                <div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm z-10"><i class="fa-solid fa-check"></i></div>
-                                <div class="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-inner mb-2 text-3xl"><i :class="medal.icon"></i></div>
-                                <p class="text-xs font-black text-slate-700 leading-tight h-8 flex items-center justify-center">{{ medal.name }}</p>
-                                <p class="text-[10px] font-bold mt-1" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">{{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}</p>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- 頁3: 獎章榮譽 -->
+<div class="slide-page space-y-3 pt-2">
+    <div class="list-card bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
+        <div class="flex justify-between items-center mb-2">
+            <div><p class="text-[10px] opacity-80 font-bold tracking-wider uppercase">Achievement</p><h3 class="text-xl font-black">榮譽勳章統計</h3></div>
+            <div class="text-right"><span class="text-3xl font-black">{{ medalCount }}</span><span class="text-xs opacity-80 ml-1">/ 12</span></div>
+        </div>
+        <div class="w-full h-1.5 bg-black/20 rounded-full overflow-hidden">
+            <div class="h-full bg-white transition-all duration-1000" :style="{ width: (medalCount / 12 * 100) + '%' }"></div>
+        </div>
+    </div>
+    <div class="grid grid-cols-3 gap-2 pb-10">
+        <div v-for="medal in medalList" :key="medal.id" class="list-card p-2 py-4 flex flex-col items-center text-center transition-all duration-500 relative" :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm opacity-100' : 'opacity-20 grayscale bg-slate-50'">
+            <div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm z-10"><i class="fa-solid fa-check"></i></div>
+            <div class="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-inner mb-2 text-3xl"><i :class="medal.icon"></i></div>
+            
+            <!-- 加入 whitespace-pre-line 讓 \n 可以斷行，並將 h-8 改成 min-h-[32px] 防裁切 -->
+            <p class="text-xs font-black text-slate-700 leading-tight min-h-[32px] flex items-center justify-center whitespace-pre-line">{{ medal.name }}</p>
+            
+            <p class="text-[10px] font-bold mt-1" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">{{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}</p>
+        </div>
+    </div>
+</div>
 
                     <!-- 頁4: 歷年時數 -->
                     <div class="slide-page space-y-3 pt-2">
@@ -352,19 +355,19 @@
                 '陳政龍','蘇傳凱','許智傑','劉奕昕','許微絜','陳冠中','洪松齡','莊麗雲','詹明祥','李宗憲','吳柏昇','林聖欽','史民其','葉鑫','蘇智虹','劉心瑀','蔡弦甫','王佩瑾','蒲琦佩','呂庭佳','林宛萱'
             ];
 
-            const medalList = [
+           const medalList = [
                 { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
                 { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
                 { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
-                { name: '衛福部-金-8000小時', id: '衛福部 金', icon: 'fa-solid fa-certificate text-yellow-500' },
-                { name: '衛福部-銀-5000小時', id: '衛福部 銀', icon: 'fa-solid fa-certificate text-slate-400' },
-                { name: '衛福部-銅-3000小時', id: '衛福部 銅', icon: 'fa-solid fa-certificate text-amber-700' },
-                { name: '內政部-金-2500小時', id: '內政部 金', icon: 'fa-solid fa-award text-yellow-500' },
-                { name: '內政部-銀-2000小時', id: '內政部 銀', icon: 'fa-solid fa-award text-slate-400' },
-                { name: '內政部-銅-1500小時', id: '內政部 銅', icon: 'fa-solid fa-award text-amber-700' },
-                { name: '新北市-金-1800小時', id: '新北市 金', icon: 'fa-solid fa-shield-halved text-yellow-500' },
-                { name: '新北市-銀-1200小時', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
-                { name: '新北市-銅-600小時', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
+                { name: '衛福部-金\n8000小時', id: '衛福部 金', icon: 'fa-solid fa-certificate text-yellow-500' },
+                { name: '衛福部-銀\n5000小時', id: '衛福部 銀', icon: 'fa-solid fa-certificate text-slate-400' },
+                { name: '衛福部-銅\n3000小時', id: '衛福部 銅', icon: 'fa-solid fa-certificate text-amber-700' },
+                { name: '內政部-金\n2500小時', id: '內政部 金', icon: 'fa-solid fa-award text-yellow-500' },
+                { name: '內政部-銀\n2000小時', id: '內政部 銀', icon: 'fa-solid fa-award text-slate-400' },
+                { name: '內政部-銅\n1500小時', id: '內政部 銅', icon: 'fa-solid fa-award text-amber-700' },
+                { name: '新北市-金\n1800小時', id: '新北市 金', icon: 'fa-solid fa-shield-halved text-yellow-500' },
+                { name: '新北市-銀\n1200小時', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
+                { name: '新北市-銅\n600小時', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
             ];
 
             const dashboardTabs = [
