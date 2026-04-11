@@ -3,64 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <!-- 原生 App 體驗標籤 -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#f1f5f9">
-    <meta name="format-detection" content="telephone=no">
-
     <title>海山救護義消平台</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
     <style>
-        :root { 
-            --safe-top: env(safe-area-inset-top); 
-            --safe-bottom: env(safe-area-inset-bottom); 
-            --header-bg: #f1f5f9;
-        }
+        :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); --header-bg: #f1f5f9; }
+        html, body { margin:0;padding:0; background: var(--header-bg); color:#1e293b; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; height:100%;width:100%; overflow:hidden; overscroll-behavior:none; -webkit-font-smoothing:antialiased; }
+        #app { width:100%; height:100dvh; max-width:450px; margin:0 auto; display:flex; flex-direction:column; position:relative; background:#f1f5f9; box-shadow:0 0 50px rgba(0,0,0,.08); }
         
-        html, body { 
-            margin:0;padding:0;
-            background: var(--header-bg); 
-            color:#1e293b;
-            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-            height:100%;width:100%;
-            overflow:hidden;
-            overscroll-behavior:none;
-            -webkit-font-smoothing:antialiased; 
-        }
-
-        #app { 
-            width:100%;
-            height:100dvh;
-            max-width:450px;
-            margin:0 auto;
-            display:flex;
-            flex-direction:column;
-            position:relative;
-            background:#f1f5f9;
-            box-shadow:0 0 50px rgba(0,0,0,.08); 
-        }
-
+        /* 頂部警示燈條動畫 */
+        .siren-bar  { height:6px;width:100%;display:flex;position:absolute;top:0;left:0;z-index:20; }
         @keyframes siren-breath-red  { 0%,100%{background:#ef4444;opacity:.3}50%{background:#f00;opacity:1;box-shadow:0 0 15px rgba(239,68,68,.5)} }
         @keyframes siren-breath-blue { 0%,100%{background:#3b82f6;opacity:1;box-shadow:0 0 15px rgba(59,130,246,.5)}50%{background:#2563eb;opacity:.3} }
-        .siren-bar  { height:6px;width:100%;display:flex;position:absolute;top:0;left:0;z-index:20; }
         .siren-red  { flex:1;animation:siren-breath-red  2.5s ease-in-out infinite;border-top-left-radius:32px; }
         .siren-blue { flex:1;animation:siren-breath-blue 2.5s ease-in-out infinite;border-top-right-radius:32px; }
 
         .login-card { background:#fff;border:1px solid rgba(226,232,240,.5);box-shadow:0 25px 50px -12px rgba(15,23,42,.15);position:relative;overflow:hidden; }
         .med-input  { background:#f8fafc!important;border:1px solid #cbd5e1!important;outline:none;border-radius:16px;font-size:15px;font-weight:600; }
         .med-btn    { background:linear-gradient(180deg,#3b82f6 0%,#2563eb 100%);color:white;border-radius:16px;font-weight:800;border:1px solid #1d4ed8; }
-
+        
         .horizontal-scroll { display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none; }
         .horizontal-scroll::-webkit-scrollbar { display:none; }
 
+        /* --- 大卡片核心樣式 (補回斜光) --- */
         .bank-card { flex:0 0 88%;scroll-snap-align:center;margin-right:12px;border-radius:28px;color:white;position:relative;overflow:hidden;padding:24px;min-height:190px; box-shadow: 0 12px 24px -8px rgba(0,0,0,0.25); }
-        .bank-card::after { content:'';position:absolute;top:0;left:-50%;width:200%;height:100%;background:linear-gradient(to right,transparent,rgba(255,255,255,0.15),transparent);transform:rotate(30deg);pointer-events:none; }
-        
+        .bank-card::after { 
+            content:''; position:absolute; top:0; left:-50%; width:200%; height:100%; 
+            background:linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent); 
+            transform:rotate(30deg); pointer-events:none; 
+        }
         .bg-card-blue    { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important; }
         .bg-card-emerald { background: linear-gradient(135deg, #064e3b 0%, #10b981 100%) !important; }
         .bg-card-rose    { background: linear-gradient(135deg, #9f1239 0%, #f43f5e 100%) !important; }
@@ -74,15 +46,14 @@
         .cards-section.expanded  { max-height:260px; opacity:1; padding:12px 0 8px; }
         .cards-section.collapsed { max-height:0;     opacity:0; padding:0; }
 
-        .tabs-section { flex-shrink:0;background:#f1f5f9;z-index:30;transition:padding .3s ease; }
-        .drag-handle { display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 2px;cursor:pointer; touch-action:none; }
+        .tabs-section { flex-shrink:0;background:#f1f5f9;z-index:30; }
+        .drag-handle { display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 2px;cursor:pointer; }
         .drag-handle-bar { width:36px;height:4px;border-radius:99px;background:#cbd5e1; }
         
         .slides-section { flex:1;overflow:hidden;min-height:0; }
         .content-slider { display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;width:100%;height:100%; }
         .content-slider::-webkit-scrollbar { display:none; }
         .slide-page { flex:0 0 100%;width:100%;scroll-snap-align:start;padding:0 20px 100px 20px;box-sizing:border-box;overflow-y:auto; }
-
         nav { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
     </style>
 </head>
@@ -90,21 +61,20 @@
 <div id="app">
 
     <!-- 登入頁 -->
-    <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in relative z-20" :style="{ paddingTop: 'var(--safe-top)' }">
+    <div v-if="currPage === 'login'" class="flex-1 flex flex-col justify-center p-6 fade-in relative" :style="{ paddingTop: 'var(--safe-top)' }">
         <div class="login-card rounded-[32px] w-full text-center mx-auto max-w-[360px]">
             <div class="siren-bar"><div class="siren-red"></div><div class="siren-blue"></div></div>
             <div class="p-10 pt-12 pb-12">
-                <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-50 to-blue-100 rounded-full flex items-center justify-center shadow-lg border border-blue-200 mb-6"><i class="fa-solid fa-star-of-life text-3xl text-blue-600"></i></div>
+                <div class="w-16 h-16 mx-auto bg-gradient-to-tr from-blue-50 to-blue-100 rounded-full flex items-center justify-center mb-6 shadow-sm border border-blue-100"><i class="fa-solid fa-star-of-life text-3xl text-blue-600"></i></div>
                 <div class="mb-10"><h1 class="text-3xl font-black tracking-tight text-slate-800">HAISHAN EMS</h1><p class="text-[10px] text-blue-600 font-bold tracking-[0.25em] uppercase mt-1">Volunteer Platform</p></div>
                 <div class="space-y-5 text-left">
                     <div class="relative"><i class="fa-solid fa-user-nurse absolute left-4 top-4 text-slate-400"></i><select v-model="loginForm.name" class="med-input w-full p-4 pl-12 appearance-none text-slate-700"><option value="" disabled>請選擇救護人員</option><option v-for="m in members" :key="m.id" :value="m.姓名">{{ m.姓名 }}</option></select></div>
                     <div class="relative"><i class="fa-solid fa-shield-halved absolute left-4 top-4 text-slate-400"></i><input v-model="loginForm.pass" type="password" placeholder="安全密碼" class="med-input w-full p-4 pl-12 font-bold"></div>
                     <button @click="handleLogin" class="med-btn w-full py-4 mt-8 transition-all uppercase">Secure Login</button>
-                    <p v-if="errMsg" class="text-red-600 text-sm text-center mt-4 font-black fade-in"><i class="fa-solid fa-circle-exclamation"></i> {{ errMsg }}</p>
+                    <p v-if="errMsg" class="text-red-600 text-sm text-center mt-4 font-black"><i class="fa-solid fa-circle-exclamation"></i> {{ errMsg }}</p>
                 </div>
             </div>
         </div>
-        <div class="mt-8 text-center text-[10px] text-slate-400 font-medium tracking-widest uppercase">海山救護義消智慧平台 © 2024</div>
     </div>
 
     <!-- 登入後 -->
@@ -118,7 +88,7 @@
         </header>
 
         <div v-if="currPage === 'dashboard'" class="dashboard-wrapper fade-in">
-
+            
             <!-- A. 大卡片區 -->
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="horizontal-scroll px-6 mb-2">
@@ -152,13 +122,13 @@
 
             <!-- B. Tab 選單 -->
             <div class="tabs-section">
-                <div class="drag-handle" @click="toggleCards" @touchstart.passive="onHandleTouchStart" @touchend.passive="onHandleTouchEnd">
+                <div class="drag-handle" @click="toggleCards">
                     <div class="drag-handle-bar"></div>
-                    <i class="fa-solid fa-chevron-up collapse-arrow" :class="cardsExpanded ? 'up' : 'down'"></i>
+                    <i class="fa-solid fa-chevron-up text-[8px] text-slate-300 transition-transform duration-300" :class="cardsExpanded ? '' : 'rotate-180'"></i>
                 </div>
                 <div class="horizontal-scroll px-6 gap-3 pb-2">
                     <div v-for="(tab, index) in dashboardTabs" :key="tab.id" @click="scrollToPage(index)" class="flex flex-col items-center shrink-0">
-                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 transition-all shadow-sm"
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center mb-2 shadow-sm transition-all"
                              :class="activeDashboardTab === tab.id ? tab.activeClass : 'bg-white text-slate-300 border border-slate-100'">
                             <i :class="tab.icon" class="text-xl"></i>
                         </div>
@@ -172,147 +142,67 @@
                 <div class="content-slider" ref="slider" @scroll="onSliderScroll">
 
                     <!-- 頁1: 年度統計 -->
-                    <div class="slide-page">
-                        <div class="grid grid-cols-3 gap-2 mt-2 pb-10">
-                            <div v-for="item in caseTypes" :key="item.name" 
-                                 class="list-card p-3 flex flex-col items-center justify-center text-center transition-all"
-                                 :class="userData[item.name]>0 ? 'bg-white border-blue-100 shadow-sm' : 'bg-slate-50/50 border-transparent opacity-60'">
-                                <div class="w-9 h-9 rounded-lg flex items-center justify-center mb-1.5"
-                                     :class="userData[item.name]>0 ? 'bg-blue-50 text-blue-500' : 'bg-slate-100 text-slate-300'">
-                                    <i :class="['fa-solid', item.icon]" class="text-xs"></i>
-                                </div>
-                                <p class="text-[10px] font-bold text-slate-500 leading-tight h-5 flex items-center justify-center">{{ item.name }}</p>
-                                <p class="text-lg font-black mt-0.5" :class="userData[item.name]>0 ? 'text-blue-600' : 'text-slate-300'">
-                                    {{ userData[item.name] || 0 }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="slide-page"><div class="grid grid-cols-3 gap-2 mt-2 pb-10"><div v-for="item in caseTypes" :key="item.name" class="list-card p-3 flex flex-col items-center text-center shadow-sm" :class="userData[item.name]>0 ? 'bg-white border-blue-100' : 'opacity-40'"><div class="w-9 h-9 rounded-lg flex items-center justify-center mb-1.5" :class="userData[item.name]>0 ? 'bg-blue-50 text-blue-500' : 'bg-slate-100 text-slate-300'"><i :class="['fa-solid', item.icon]" class="text-xs"></i></div><p class="text-[10px] font-bold text-slate-500 leading-tight h-5 flex items-center justify-center">{{ item.name }}</p><p class="text-lg font-black mt-0.5" :class="userData[item.name]>0 ? 'text-blue-600' : 'text-slate-300'">{{ userData[item.name] || 0 }}</p></div></div></div>
 
                     <!-- 頁2: 公差名單 -->
-                    <div class="slide-page space-y-3 pb-10">
-                        <div class="mt-2 list-card bg-white border border-slate-100 shadow-sm overflow-hidden">
-                            <div class="bg-slate-50/80 px-3 py-3 border-b border-slate-100">
-                                <div class="flex justify-between items-center mb-2.5 px-0.5">
-                                    <span class="text-[10px] font-black text-blue-800 uppercase tracking-widest">公差輪值順序</span>
-                                    <span class="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded-full shadow-sm">AI 智慧選取輪值</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <template v-for="(team, idx) in sortedTeams" :key="team.name">
-                                        <div class="flex-1 flex flex-col items-center px-0.5">
-                                            <div class="w-full py-1.5 bg-white border border-blue-100 rounded-lg shadow-sm flex flex-col items-center justify-center">
-                                                <span class="text-[9px] font-black text-slate-500 leading-none mb-1.5 scale-90">{{ team.name }}</span>
-                                                <span class="text-[11px] font-black text-blue-600 leading-none">{{ team.total }}</span>
-                                            </div>
-                                        </div>
-                                        <div v-if="idx < sortedTeams.length - 1" class="text-slate-300"><i class="fa-solid fa-chevron-right text-[8px]"></i></div>
-                                    </template>
-                                </div>
-                            </div>
-                            <div class="p-4 flex items-center justify-between gap-4 bg-white">
-                                <div v-for="r in rotationDuty" :key="r.姓名" class="flex-1 flex items-center gap-2">
-                                    <div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-100"><i class="fa-solid fa-user-check text-[10px]"></i></div>
-                                    <div class="overflow-hidden">
-                                        <p class="text-[8px] font-bold text-slate-400 uppercase truncate leading-none mb-1">{{ r.duty_group }}</p>
-                                        <p class="text-[15px] font-black text-slate-800 truncate leading-none">{{ r.姓名 }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-for="group in [{n:'幹部',i:'fa-crown',c:'text-purple-600 bg-purple-50'},{n:'第一小隊',i:'fa-shield-heart',c:'text-orange-600 bg-orange-50'},{n:'第二小隊',i:'fa-kit-medical',c:'text-red-600 bg-red-50'},{n:'第三小隊',i:'fa-ambulance',c:'text-blue-600 bg-blue-50'}]" :key="group.n" class="list-card">
-                            <div class="p-3 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c">
-                                <span class="flex items-center"><div class="mr-3 w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm"><i :class="['fa-solid',group.i]" class="text-[10px]"></i></div>{{ group.n }}</span>
-                                <span class="bg-white/60 px-3 py-1 rounded-full text-[11px] shadow-sm">{{ getGroupTotal(group.n) }} 次</span>
-                            </div>
-                            <div class="p-2 grid grid-cols-2 gap-1">
-                                <div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl transition-colors" :class="m.姓名===userData.姓名?'bg-blue-50 border border-blue-100':'bg-white'">
-                                    <div class="flex flex-col"><div class="flex items-center gap-1.5"><i class="fa-solid fa-user-doctor text-[10px] text-slate-400"></i><span class="text-sm font-bold text-slate-700">{{ m.姓名 }}</span></div><span class="text-[9px] font-bold opacity-40 ml-4">{{ m.duty_title||'隊員' }}</span></div>
-                                    <span class="text-sm font-black text-slate-600">{{ m.duty_count||0 }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="slide-page space-y-3 pb-10"><div class="mt-2 list-card bg-white border border-slate-100 shadow-sm overflow-hidden"><div class="bg-slate-50/80 px-3 py-3 border-b border-slate-100"><div class="flex justify-between items-center mb-2.5"><span class="text-[10px] font-black text-blue-800 uppercase">公差輪值順序</span><span class="text-[9px] font-black bg-blue-600 text-white px-2 py-0.5 rounded-full">AI 智慧選取</span></div><div class="flex items-center justify-between"><template v-for="(team, idx) in sortedTeams" :key="team.name"><div class="flex-1 flex flex-col items-center"><div class="w-full py-1.5 bg-white border border-blue-100 rounded-lg shadow-sm flex flex-col items-center"><span class="text-[9px] font-black text-slate-500 leading-none mb-1">{{ team.name }}</span><span class="text-[11px] font-black text-blue-600 leading-none">{{ team.total }}</span></div></div><div v-if="idx < sortedTeams.length - 1" class="text-slate-300 mx-1"><i class="fa-solid fa-chevron-right text-[8px]"></i></div></template></div></div><div class="p-4 flex items-center justify-between gap-4"><div v-for="r in rotationDuty" :key="r.姓名" class="flex-1 flex items-center gap-2"><div class="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg"><i class="fa-solid fa-user-check text-[10px]"></i></div><div class="overflow-hidden"><p class="text-[8px] font-bold text-slate-400 uppercase truncate mb-1">{{ r.duty_group }}</p><p class="text-[15px] font-black text-slate-800 truncate">{{ r.姓名 }}</p></div></div></div></div><div v-for="group in [{n:'幹部',i:'fa-crown',c:'text-purple-600 bg-purple-50'},{n:'第一小隊',i:'fa-shield-heart',c:'text-orange-600 bg-orange-50'},{n:'第二小隊',i:'fa-kit-medical',c:'text-red-600 bg-red-50'},{n:'第三小隊',i:'fa-ambulance',c:'text-blue-600 bg-blue-50'}]" :key="group.n" class="list-card"><div class="p-3 flex justify-between items-center border-b border-slate-100 font-black text-sm" :class="group.c"><span class="flex items-center"><div class="mr-3 w-7 h-7 rounded-lg bg-white flex items-center justify-center shadow-sm"><i :class="['fa-solid',group.i]" class="text-[10px]"></i></div>{{ group.n }}</span><span class="bg-white/60 px-3 py-1 rounded-full text-[11px]">{{ getGroupTotal(group.n) }} 次</span></div><div class="p-2 grid grid-cols-2 gap-1"><div v-for="m in filterByGroup(group.n)" :key="m.姓名" class="flex justify-between items-center p-3 rounded-xl shadow-sm" :class="m.姓名===userData.姓名?'bg-blue-50 border border-blue-100':'bg-white'"><div class="flex flex-col"><div class="flex items-center gap-1.5"><i class="fa-solid fa-user-doctor text-[10px] text-slate-400"></i><span class="text-sm font-bold text-slate-700">{{ m.姓名 }}</span></div><span class="text-[9px] font-bold opacity-40 ml-4">{{ m.duty_title||'隊員' }}</span></div><span class="text-sm font-black text-slate-600">{{ m.duty_count||0 }}</span></div></div></div></div>
 
                     <!-- 頁3: 獎章榮譽 -->
-<div class="slide-page space-y-3 pt-2">
-    <div class="list-card bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg">
-        <div class="flex justify-between items-center mb-2">
-            <div><p class="text-[10px] opacity-80 font-bold tracking-wider uppercase">Achievement</p><h3 class="text-xl font-black">榮譽勳章統計</h3></div>
-            <div class="text-right"><span class="text-3xl font-black">{{ medalCount }}</span><span class="text-xs opacity-80 ml-1">/ 12</span></div>
-        </div>
-        <div class="w-full h-1.5 bg-black/20 rounded-full overflow-hidden">
-            <div class="h-full bg-white transition-all duration-1000" :style="{ width: (medalCount / 12 * 100) + '%' }"></div>
-        </div>
-    </div>
-    <div class="grid grid-cols-3 gap-2 pb-10">
-        <div v-for="medal in medalList" :key="medal.id" class="list-card p-2 py-4 flex flex-col items-center text-center transition-all duration-500 relative" :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm opacity-100' : 'opacity-20 grayscale bg-slate-50'">
-            <div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-sm z-10"><i class="fa-solid fa-check"></i></div>
-            <div class="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-inner mb-2 text-3xl"><i :class="medal.icon"></i></div>
-            
-            <!-- 加入 whitespace-pre-line 讓 \n 可以斷行，並將 h-8 改成 min-h-[32px] 防裁切 -->
-            <p class="text-xs font-black text-slate-700 leading-tight min-h-[32px] flex items-center justify-center whitespace-pre-line">{{ medal.name }}</p>
-            
-            <p class="text-[10px] font-bold mt-1" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">{{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}</p>
-        </div>
-    </div>
-</div>
+                    <div class="slide-page space-y-3 pt-2"><div class="list-card bg-gradient-to-r from-amber-500 to-orange-600 p-4 text-white shadow-lg"><div class="flex justify-between items-center mb-2"><div><p class="text-[10px] opacity-80 font-bold uppercase tracking-wider">Achievement</p><h3 class="text-xl font-black">榮譽勳章統計</h3></div><div class="text-right"><span class="text-3xl font-black">{{ medalCount }}</span><span class="text-xs opacity-80 ml-1">/ 12</span></div></div><div class="w-full h-1.5 bg-black/20 rounded-full overflow-hidden"><div class="h-full bg-white transition-all duration-1000" :style="{ width: (medalCount / 12 * 100) + '%' }"></div></div></div><div class="grid grid-cols-3 gap-2 pb-10"><div v-for="medal in medalList" :key="medal.id" class="list-card p-2 py-4 flex flex-col items-center text-center relative shadow-sm" :class="hasMedal(medal.id) ? 'bg-white border-amber-200 shadow-sm' : 'opacity-20 grayscale bg-slate-50'"><div v-if="hasMedal(medal.id)" class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] text-white z-10 shadow-sm"><i class="fa-solid fa-check"></i></div><div class="w-14 h-14 rounded-xl bg-white flex items-center justify-center mb-2 text-3xl"><i :class="medal.icon"></i></div><p class="text-xs font-black text-slate-700 leading-tight min-h-[32px] flex items-center justify-center whitespace-pre-line">{{ medal.name }}</p><p class="text-[10px] font-bold mt-1" :class="hasMedal(medal.id) ? 'text-amber-600' : 'text-slate-400'">{{ hasMedal(medal.id) ? findMedalValue(medal.id) : '未獲得' }}</p></div></div></div>
 
                     <!-- 頁4: 歷年時數 -->
-                    <div class="slide-page space-y-3 pt-2">
-                        <div class="list-card p-5 bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
-                            <div class="flex justify-between items-center">
-                                <div><p class="text-[10px] opacity-80 font-bold uppercase">Yearly Service Log</p><h3 class="text-xl font-black">歷年服務時數</h3></div>
-                                <div class="text-right"><p class="text-[10px] opacity-80 font-bold uppercase">Total hr</p><h3 class="text-xl font-black">{{ totalYearlyHours }}</h3></div>
-                            </div>
-                        </div>
-                        <div class="list-card p-3">
-                            <div class="grid grid-cols-2 gap-x-6 gap-y-1 pb-10">
-                                <div v-for="y in Array.from({length:21}, (_,i)=>114-i)" :key="y" class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0" :class="userData['hist_'+y] ? 'opacity-100' : 'opacity-30'">
-                                    <span class="text-xs font-black text-slate-400">{{y}} 年度</span>
-                                    <span class="text-sm font-mono font-black" :class="userData['hist_'+y] ? 'text-indigo-600' : 'text-slate-300'">{{ userData['hist_'+y] || '0' }} <span class="text-[9px] font-bold uppercase">hr</span></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="slide-page space-y-3 pt-2"><div class="list-card p-5 bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg"><div class="flex justify-between items-center"><div><p class="text-[10px] opacity-80 font-bold uppercase">Yearly Service Log</p><h3 class="text-xl font-black">歷年服務時數</h3></div><div class="text-right"><p class="text-[10px] opacity-80 font-bold uppercase">Total hr</p><h3 class="text-xl font-black">{{ totalYearlyHours }}</h3></div></div></div><div class="list-card p-3 pb-10 shadow-sm"><div class="grid grid-cols-2 gap-x-6 gap-y-1"><div v-for="y in Array.from({length:21}, (_,i)=>114-i)" :key="y" class="flex justify-between items-center py-2 border-b border-slate-50 last:border-0" :class="userData['hist_'+y] ? 'opacity-100' : 'opacity-30'"><span class="text-xs font-black text-slate-400">{{y}} 年度</span><span class="text-sm font-mono font-black" :class="userData['hist_'+y] ? 'text-indigo-600' : 'text-slate-300'">{{ userData['hist_'+y] || '0' }} <span class="text-[9px] font-bold uppercase">hr</span></span></div></div></div></div>
 
-                    <!-- 頁5: 協勤時數 (名字已小一號) -->
-                    <div class="slide-page pt-2">
-                        <div class="mb-6 px-1">
-                            <h3 class="text-xl font-black text-slate-800 leading-none mb-1">隊員協勤時數明細</h3>
-                        </div>
-
-                        <!-- 資料列表 (名字縮至 text-lg) -->
-                        <div class="space-y-4 pb-28">
-                            <div v-for="m in sortedMembersList" :key="m.姓名" 
-                                 class="list-card px-5 py-4 border transition-all"
-                                 :class="m.姓名 === userData.姓名 ? 'bg-blue-600 border-blue-700 text-white ring-4 ring-blue-100 shadow-lg scale-[1.02] z-10' : 'bg-white border-slate-100'">
-                                
-                                <div class="flex items-center justify-between mb-4">
-                                    <span class="text-lg font-black">{{ m.姓名 }}</span>
-                                    <div class="text-right">
-                                        <span class="text-xs font-bold uppercase opacity-60 mr-2">年度總計</span>
-                                        <span class="text-2xl font-black leading-none" :class="m.姓名 === userData.姓名 ? 'text-white' : 'text-indigo-600'">{{ cleanValue(m['協勤時數']) }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- 橫向滑動月份數值 -->
-                                <div class="horizontal-scroll pb-1">
-                                    <div class="flex gap-6">
-                                        <div v-for="i in 12" :key="i" class="flex flex-col items-center min-w-[28px]">
-                                            <span class="text-[10px] font-bold opacity-40 uppercase mb-1">{{ i }}月</span>
-                                            <span class="text-base font-black">{{ m['m'+i] || 0 }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- 頁5: 協勤時數 -->
+                    <div class="slide-page pt-2 pb-10"><div class="mb-4 px-1"><h3 class="text-xl font-black text-slate-800">隊員協勤時數明細</h3></div><div class="space-y-4"><div v-for="m in sortedMembersList" :key="m.姓名" class="list-card px-5 py-4 border shadow-sm" :class="m.姓名 === userData.姓名 ? 'bg-blue-600 border-blue-700 text-white ring-4 ring-blue-100 scale-[1.02] z-10' : 'bg-white border-slate-100'"><div class="flex items-center justify-between mb-4"><span class="text-lg font-black">{{ m.姓名 }}</span><div class="text-right"><span class="text-xs font-bold uppercase opacity-60 mr-2">年度總計</span><span class="text-2xl font-black leading-none" :class="m.姓名 === userData.姓名 ? 'text-white' : 'text-indigo-600'">{{ cleanValue(m['協勤時數']) }}</span></div></div><div class="horizontal-scroll pb-1"><div class="flex gap-6"><div v-for="i in 12" :key="i" class="flex flex-col items-center min-w-[28px]"><span class="text-[10px] font-bold opacity-40 uppercase mb-1">{{ i }}月</span><span class="text-base font-black">{{ m['m'+i] || 0 }}</span></div></div></div></div></div></div>
 
                     <!-- 頁6: 零用金 -->
-                    <div class="slide-page pt-2">
-                        <div class="list-card p-8 text-center bg-emerald-50/20 mt-2">
-                            <div class="flex justify-between items-center mb-6"><h4 class="text-lg font-black">預估零用金</h4><i class="fa-solid fa-sack-dollar text-2xl text-emerald-500"></i></div>
-                            <div class="bg-emerald-600 rounded-[32px] p-8 text-center shadow-xl"><h3 class="text-4xl font-black text-white">$ {{ calculateMoney() }}</h3></div>
+                    <div class="slide-page pt-2 pb-24">
+                        <div class="list-card bg-gradient-to-br from-slate-700 to-slate-900 p-6 text-white shadow-lg mb-4">
+                            <div class="flex justify-between items-start mb-6">
+                                <div>
+                                    <p class="text-[10px] opacity-60 font-bold tracking-widest uppercase">目前結餘</p>
+                                    <h3 class="text-4xl font-black mt-1">$ {{ formatNumber(userData['squad_fund']) }}</h3>
+                                </div>
+                                <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg">
+                                    <i class="fa-solid fa-vault text-xl text-emerald-400"></i>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 border-t border-white/10 pt-4 mt-2">
+                                <div class="flex-1">
+                                    <p class="text-[9px] opacity-60 font-bold uppercase mb-1">年度總收入</p>
+                                    <p class="text-lg font-black text-emerald-400">$ {{ formatNumber(userData['squad_income']) }}</p>
+                                </div>
+                                <div class="flex-1 border-l border-white/10 pl-4">
+                                    <p class="text-[9px] opacity-60 font-bold uppercase mb-1">年度總支出</p>
+                                    <p class="text-lg font-black text-rose-400">$ {{ formatNumber(userData['squad_expense']) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center px-1 mb-2">
+                                <h4 class="text-sm font-black text-slate-700"><i class="fa-solid fa-list-ul mr-2 text-emerald-500"></i>收支明細表</h4>
+                                <span class="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full font-bold">由新到舊排序</span>
+                            </div>
+                            <div v-if="!userData['cash_history']" class="p-10 text-center opacity-30 font-black">尚無資料</div>
+                            <div v-for="(log, idx) in sortedCashHistory" :key="idx" class="list-card p-4 bg-white border-l-4 shadow-sm" :class="log.income > 0 ? 'border-l-emerald-400' : 'border-l-rose-400'">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[10px] font-mono text-slate-400 font-bold">{{ log.date }}</span>
+                                            <span v-if="log.income > 0" class="text-[9px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-black">收入</span>
+                                            <span v-else class="text-[9px] bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded font-black">支出</span>
+                                        </div>
+                                        <h5 class="text-sm font-black text-slate-700 leading-tight">{{ log.item }}</h5>
+                                        <p v-if="log.note && log.note !== 'undefined' && log.note !== ''" class="text-[10px] text-slate-400 mt-1 font-medium">{{ log.note }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-sm font-black" :class="log.income > 0 ? 'text-emerald-600' : 'text-rose-600'">{{ log.income > 0 ? '+' : '-' }} {{ formatNumber(log.income > 0 ? log.income : log.expense) }}</p>
+                                        <p class="text-[10px] font-bold text-slate-300 mt-1">結餘 {{ formatNumber(log.balance) }}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -320,6 +210,7 @@
             </div>
         </div>
 
+        <!-- 底部導航 -->
         <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 flex justify-around items-center px-2 z-50">
             <div @click="currPage='dashboard';scrollToPage(0)" :class="activeDashboardTab === 'stats' ? 'text-blue-600' : 'text-slate-300'" class="flex flex-col items-center flex-1"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
             <div class="flex flex-col items-center flex-1 text-slate-200"><i class="fa-solid fa-calendar-days text-xl"></i><span class="text-[13px] font-black mt-1">排班</span></div>
@@ -349,13 +240,9 @@
             const loginUserName = ref('');
             const errMsg = ref('');
             const slider = ref(null);
-            let touchStartY = 0;
 
-            const NAME_ORDER = [
-                '陳政龍','蘇傳凱','許智傑','劉奕昕','許微絜','陳冠中','洪松齡','莊麗雲','詹明祥','李宗憲','吳柏昇','林聖欽','史民其','葉鑫','蘇智虹','劉心瑀','蔡弦甫','王佩瑾','蒲琦佩','呂庭佳','林宛萱'
-            ];
-
-           const medalList = [
+            const NAME_ORDER = ['陳政龍','蘇傳凱','許智傑','劉奕昕','許微絜','陳冠中','洪松齡','莊麗雲','詹明祥','李宗憲','吳柏昇','林聖欽','史民其','葉鑫','蘇智虹','劉心瑀','蔡弦甫','王佩瑾','蒲琦佩','呂庭佳','林宛萱'];
+            const medalList = [
                 { name: '志工菁英', id: '志工菁英', icon: 'fa-solid fa-trophy text-amber-500' },
                 { name: '義消楷模', id: '義消楷模', icon: 'fa-solid fa-star text-orange-500' },
                 { name: '績優志工', id: '績優志工', icon: 'fa-solid fa-medal text-blue-500' },
@@ -369,16 +256,14 @@
                 { name: '新北市-銀\n1200小時', id: '新北市 銀', icon: 'fa-solid fa-shield-halved text-slate-400' },
                 { name: '新北市-銅\n600小時', id: '新北市 銅', icon: 'fa-solid fa-shield-halved text-amber-700' }
             ];
-
             const dashboardTabs = [
-                { id:'stats',   name:'年度統計', icon:'fa-solid fa-chart-pie', activeClass:'bg-blue-600 text-white shadow-md', textColor:'text-blue-600' },
-                { id:'duty',    name:'公差名單', icon:'fa-solid fa-clipboard-user', activeClass:'bg-cyan-600 text-white shadow-md', textColor:'text-cyan-600' },
-                { id:'medals',  name:'獎章榮譽', icon:'fa-solid fa-medal', activeClass:'bg-amber-500 text-white shadow-md', textColor:'text-amber-600' },
+                { id:'stats', name:'年度統計', icon:'fa-solid fa-chart-pie', activeClass:'bg-blue-600 text-white shadow-md', textColor:'text-blue-600' },
+                { id:'duty', name:'公差名單', icon:'fa-solid fa-clipboard-user', activeClass:'bg-cyan-600 text-white shadow-md', textColor:'text-cyan-600' },
+                { id:'medals', name:'獎章榮譽', icon:'fa-solid fa-medal', activeClass:'bg-amber-500 text-white shadow-md', textColor:'text-amber-600' },
                 { id:'history', name:'歷年時數', icon:'fa-solid fa-timeline', activeClass:'bg-indigo-500 text-white shadow-md', textColor:'text-indigo-600' },
-                { id:'hours',   name:'協勤時數', icon:'fa-solid fa-clock', activeClass:'bg-indigo-600 text-white shadow-md', textColor:'text-indigo-600' },
-                { id:'money',   name:'零用金',   icon:'fa-solid fa-dollar-sign', activeClass:'bg-emerald-600 text-white shadow-md', textColor:'text-emerald-600' }
+                { id:'hours', name:'協勤時數', icon:'fa-solid fa-clock', activeClass:'bg-indigo-600 text-white shadow-md', textColor:'text-indigo-600' },
+                { id:'money', name:'零用金', icon:'fa-solid fa-dollar-sign', activeClass:'bg-emerald-600 text-white shadow-md', textColor:'text-emerald-600' }
             ];
-
             const caseTypes = [
                 { name: '急病', icon: 'fa-briefcase-medical' }, { name: '路倒', icon: 'fa-person-falling' }, { name: '車禍', icon: 'fa-car-burst' },
                 { name: 'OHCA', icon: 'fa-heart-pulse' }, { name: '一般受傷', icon: 'fa-band-aid' }, { name: '心肌梗塞MI', icon: 'fa-heart-crack' },
@@ -389,114 +274,42 @@
                 { name: '車禍救助', icon: 'fa-trailer' }, { name: '電梯受困', icon: 'fa-elevator' }, { name: '其他', icon: 'fa-ellipsis' }
             ];
 
-            const userData = computed(() => {
-                if (!loginUserName.value) return {};
-                return members.value.find(m => m.姓名 === loginUserName.value) || {};
-            });
-
-            const sortedMembersList = computed(() => {
-                if (members.value.length === 0) return [];
-                return [...members.value].sort((a, b) => {
-                    const idxA = NAME_ORDER.indexOf(a.姓名);
-                    const idxB = NAME_ORDER.indexOf(b.姓名);
-                    return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
-                });
-            });
-
-            const medalCount = computed(() => {
-                if (!userData.value || Object.keys(userData.value).length === 0) return 0;
-                return medalList.filter(m => hasMedal(m.id)).length;
-            });
-
+            const userData = computed(() => loginUserName.value ? (members.value.find(m => m.姓名 === loginUserName.value) || {}) : {});
+            const sortedMembersList = computed(() => [...members.value].sort((a, b) => (NAME_ORDER.indexOf(a.姓名) === -1 ? 999 : NAME_ORDER.indexOf(a.姓名)) - (NAME_ORDER.indexOf(b.姓名) === -1 ? 999 : NAME_ORDER.indexOf(b.姓名))));
+            const medalCount = computed(() => medalList.filter(m => hasMedal(m.id)).length);
             const totalYearlyHours = computed(() => {
-                if (!userData.value || Object.keys(userData.value).length === 0) return 0;
-                let sum = 0;
-                for (let y = 94; y <= 114; y++) {
-                    const val = userData.value['hist_' + y];
-                    if (val && !isNaN(val)) sum += Number(val);
-                }
+                let sum = 0; if (!userData.value) return 0;
+                for (let y = 94; y <= 114; y++) { let val = userData.value['hist_' + y]; if (val && !isNaN(val)) sum += Number(val); }
                 return sum;
             });
+            const sortedTeams = computed(() => ['幹部', '第一小隊', '第二小隊', '第三小隊'].map(name => ({ name, total: getGroupTotal(name) })).sort((a, b) => a.total - b.total));
+            const rotationDuty = computed(() => [...members.value].sort((a, b) => (Number(a.duty_count) || 0) - (Number(b.duty_count) || 0)).slice(0, 2));
 
-            const sortedTeams = computed(() => {
-                const teams = ['幹部', '第一小隊', '第二小隊', '第三小隊'];
-                return teams.map(name => ({
-                    name,
-                    total: getGroupTotal(name)
-                })).sort((a, b) => a.total - b.total);
+            const sortedCashHistory = computed(() => {
+                let list = parseJson(userData.value['cash_history']);
+                return list.sort((a, b) => new Date(b.date) - new Date(a.date));
             });
 
-            const rotationDuty = computed(() => {
-                if (members.value.length === 0) return [];
-                const sorted = [...members.value].sort((a, b) => {
-                    const countA = Number(a.duty_count) || 0;
-                    const countB = Number(b.duty_count) || 0;
-                    if (countA !== countB) return countA - countB;
-                    return getGroupTotal(a.duty_group) - getGroupTotal(b.duty_group);
-                });
-                return sorted.slice(0, 2);
-            });
+            onMounted(() => { onSnapshot(collection(db, "members"), (snap) => { members.value = snap.docs.map(d => ({ id:d.id, ...d.data() })); }); });
 
-            onMounted(() => {
-                onSnapshot(collection(db, "members"), (snap) => {
-                    members.value = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-                });
-            });
-
-            const findMedalValue = (id) => {
-                if (!userData.value || Object.keys(userData.value).length === 0) return null;
-                const keys = Object.keys(userData.value);
-                const cleanId = id.replace(/\s+/g, '');
-                const foundKey = keys.find(k => k.startsWith('medal_') && k.replace(/\s+/g, '').includes(cleanId));
-                return foundKey ? userData.value[foundKey] : null;
-            };
-
-            const hasMedal = (medalId) => {
-                const val = findMedalValue(medalId);
-                return val !== undefined && val !== null && String(val).trim() !== "" && String(val).trim() !== "無";
-            };
-
-            const handleLogin = () => {
-                const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass));
-                if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; errMsg.value = ''; }
-                else { errMsg.value = "安全密碼錯誤"; }
-            };
-
+            const hasMedal = (mId) => { const keys = Object.keys(userData.value); const foundKey = keys.find(k => k.startsWith('medal_') && k.includes(mId.replace(/\s/g,''))); const val = foundKey ? userData.value[foundKey] : null; return val && val !== "無"; };
+            const findMedalValue = (mId) => { const keys = Object.keys(userData.value); const foundKey = keys.find(k => k.startsWith('medal_') && k.includes(mId.replace(/\s/g,''))); return foundKey ? userData.value[foundKey] : null; };
+            const handleLogin = () => { const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass)); if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; errMsg.value = ''; } else { errMsg.value = "安全密碼錯誤"; } };
             const logout = () => { currPage.value='login'; loginUserName.value=''; loginForm.value.pass=''; };
             const cleanValue = (v) => v ? String(v).replace(/[^0-9.]/g,'') : '0';
             const calculateDays = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; return Math.max(0,Math.ceil((new Date(s)-new Date())/864e5)); };
+            const scrollToPage = (index) => { if (!slider.value) return; slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior:'smooth' }); activeDashboardTab.value = dashboardTabs[index].id; };
+            const onSliderScroll = () => { if (!slider.value) return; const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth); if (dashboardTabs[index]) activeDashboardTab.value = dashboardTabs[index].id; };
             const toggleCards = () => { cardsExpanded.value = !cardsExpanded.value; };
-            const onHandleTouchStart = (e) => { touchStartY = e.touches[0].clientY; };
-            const onHandleTouchEnd = (e) => {
-                const dy = e.changedTouches[0].clientY - touchStartY;
-                if (dy < -20) cardsExpanded.value = false;
-                else if (dy > 20) cardsExpanded.value = true;
-            };
-
-            const onSliderScroll = () => {
-                if (!slider.value) return;
-                const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth);
-                if (dashboardTabs[index] && activeDashboardTab.value !== dashboardTabs[index].id) {
-                    activeDashboardTab.value = dashboardTabs[index].id;
-                }
-            };
-
-            const scrollToPage = (index) => {
-                if (!slider.value) return;
-                slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior:'smooth' });
-                activeDashboardTab.value = dashboardTabs[index].id;
-            };
-
-            const filterByGroup = (g) => {
-                const p={'分隊長':1,'副分隊長':2,'幹事':3,'助理幹事':4,'小隊長':5,'副小隊長':6,'隊員':7};
-                return members.value.filter(m=>m.duty_group===g).sort((a,b)=>(p[a.duty_title]||99)-(p[b.duty_title]||99));
-            };
+            const filterByGroup = (g) => { const p={'分隊長':1,'副分隊長':2,'幹事':3,'助理幹事':4,'小隊長':5,'副小隊長':6,'隊員':7}; return members.value.filter(m=>m.duty_group===g).sort((a,b)=>(p[a.duty_title]||99)-(p[b.duty_title]||99)); };
             const getGroupTotal = (g) => filterByGroup(g).reduce((s,m)=>s+(Number(m.duty_count)||0),0);
             const calculateMoney = () => Number(userData.value['出勤次數']||0)*200;
+            const formatNumber = (v) => v ? Number(v).toLocaleString() : '0';
+            const parseJson = (s) => { try { return s ? JSON.parse(s) : []; } catch(e) { return []; } };
 
             return {
-                currPage, activeDashboardTab, cardsExpanded, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider, medalCount, totalYearlyHours, rotationDuty, sortedTeams, sortedMembersList,
-                handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, hasMedal, findMedalValue, calculateMoney, onSliderScroll, scrollToPage, toggleCards, onHandleTouchStart, onHandleTouchEnd
+                currPage, activeDashboardTab, cardsExpanded, dashboardTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider, medalCount, totalYearlyHours, rotationDuty, sortedTeams, sortedMembersList, sortedCashHistory,
+                handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, hasMedal, findMedalValue, calculateMoney, onSliderScroll, scrollToPage, toggleCards, formatNumber, parseJson
             };
         }
     }).mount('#app');
