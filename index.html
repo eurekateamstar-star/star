@@ -496,45 +496,44 @@
                 return Array.from({ length: 7 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); const ds = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0'); return { fullDate: ds, date: d.getDate(), weekday: ['週一','週二','週三','週四','週五','週六','週日'][i], isToday: SYSTEM_TODAY === ds, isWeekend: i >= 5 }; });
             });
 
-            const setupNotifications = async (userName) => {
-    try {
-        console.log("開始請求推播權限...");
-        // 1. 請求權限
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            console.log("權限已獲得，準備註冊 Service Worker...");
-            
-            // 2. 手動註冊 Service Worker (確保在 GitHub Pages 也能找到路徑)
-            const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
-            
-            // 3. 取得 Token
-            const token = await getToken(messaging, { 
-                vapidKey: 'BHyRR-j7j66BV3nHSW_z5bMIYMPbtn8LcpttaY7ZuDHtMVFFXxILG3SbHhzFPD6TEhM1AP1XRjwgchhJrlSkFyY',
-                serviceWorkerRegistration: registration // 明確告知使用哪個註冊器
-            });
-            
-            if (token) {
-                console.log("取得 Token成功:", token);
-                // 4. 更新該隊員在 Firestore 的 Token
-                const q = query(collection(db, "members"), where("姓名", "==", userName));
-                const snap = await getDocs(q);
-                if (!snap.empty) {
-                    await updateDoc(doc(db, "members", snap.docs[0].id), {
-                        fcmToken: token
-                    });
-                    // 為了測試，成功後跳出一個提示
-                    alert("推播功能已成功啟動！");
+const setupNotifications = async (userName) => {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        // 1. 註冊 Service Worker
+                        const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js')
+                            .catch(err => {
+                                alert("Service Worker 註冊失敗: " + err.message);
+                                throw err;
+                            });
+
+                        // 2. 取得 Token
+                        const token = await getToken(messaging, { 
+                            vapidKey: 'BHyRR-j7j66BV3nHSW_z5bMIYMPbtn8LcpttaY7ZuDHtMVFFXxILG3SbHhzFPD6TEhM1AP1XRjwgchhJrlSkFyY',
+                            serviceWorkerRegistration: registration 
+                        }).catch(err => {
+                            alert("取得 Token 失敗: " + err.message);
+                            throw err;
+                        });
+                        
+                        if (token) {
+                            // 3. 儲存回資料庫
+                            const q = query(collection(db, "members"), where("姓名", "==", userName));
+                            const snap = await getDocs(q);
+                            if (!snap.empty) {
+                                await updateDoc(doc(db, "members", snap.docs[0].id), {
+                                    fcmToken: token
+                                });
+                                alert("推播 Token 已儲存！您現在可以接收公差通知。");
+                            }
+                        }
+                    } else {
+                        alert("通知權限被拒絕，請在瀏覽器設定中開啟。");
+                    }
+                } catch (err) {
+                    console.error(err);
                 }
-            } else {
-                console.log("未能取得 Token");
-            }
-        } else {
-            alert("請允許通知權限，否則無法收到公差推播");
-        }
-    } catch (err) {
-        console.error("推播初始化錯誤:", err);
-    }
-};
+            };
 
             const handleLogin = async () => { 
                 const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass)); 
