@@ -539,21 +539,37 @@
     // ── FCM 用戶訂閱（登入後呼叫） ──
     async function subscribeFCM(userName) {
         try {
-            if (!("Notification" in window)) return;
+            if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+                console.warn("此瀏覽器不支援推播"); return;
+            }
             const permission = await Notification.requestPermission();
             if (permission !== "granted") { console.log("推播授權被拒"); return; }
-            const token = await getToken(messaging, { vapidKey: FCM_VAPID_KEY });
+
+            // GitHub Pages 路徑：/star/firebase-messaging-sw.js
+            const swPath = location.pathname.includes("/star/")
+                ? "/star/firebase-messaging-sw.js"
+                : "/firebase-messaging-sw.js";
+
+            const swReg = await navigator.serviceWorker.register(swPath);
+            console.log("Service Worker 已註冊:", swReg.scope);
+
+            const token = await getToken(messaging, {
+                vapidKey: FCM_VAPID_KEY,
+                serviceWorkerRegistration: swReg
+            });
+
             if (token) {
-                // 把 fcmToken 存到 members collection（對應 Cloud Run 的讀取方式）
                 const membersSnap = await getDocs(
                     query(collection(db, "members"), where("姓名", "==", userName))
                 );
                 membersSnap.forEach(async (d) => {
                     await updateDoc(doc(db, "members", d.id), { fcmToken: token });
                 });
-                console.log("FCM 訂閱成功，token 已存入 members");
+                console.log("FCM 訂閱成功，token 已存入 members:", token.substring(0, 20) + "...");
+            } else {
+                console.warn("無法取得 FCM token");
             }
-        } catch(e) { console.warn("FCM 訂閱失敗:", e); }
+        } catch(e) { console.warn("FCM 訂閱失敗:", e.message); }
     }
 
     // 前景收到推播時顯示 toast
