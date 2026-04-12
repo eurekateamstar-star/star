@@ -500,12 +500,11 @@ const setupNotifications = async (userName) => {
                 try {
                     const permission = await Notification.requestPermission();
                     if (permission === 'granted') {
-                        // 1. 註冊 Service Worker
-                        const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js')
-                            .catch(err => {
-                                alert("Service Worker 註冊失敗: " + err.message);
-                                throw err;
-                            });
+                        // 1. 註冊並等待 Service Worker 進入 ready 狀態
+                        await navigator.serviceWorker.register('firebase-messaging-sw.js');
+                        const registration = await navigator.serviceWorker.ready; 
+
+                        console.log("Service Worker 已啟動並進入 Ready 狀態");
 
                         // 2. 取得 Token
                         const token = await getToken(messaging, { 
@@ -531,7 +530,7 @@ const setupNotifications = async (userName) => {
                         alert("通知權限被拒絕，請在瀏覽器設定中開啟。");
                     }
                 } catch (err) {
-                    console.error(err);
+                    console.error("初始化失敗:", err);
                 }
             };
 
