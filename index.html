@@ -18,6 +18,7 @@
         @keyframes shine { 0% { left: -150%; opacity: 0; } 20% { opacity: 1; } 40% { left: 100%; opacity: 0; } 100% { left: 100%; opacity: 0; } }
         .bg-card-blue { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important; }
         .bg-card-emerald { background: linear-gradient(135deg, #064e3b 0%, #10b981 100%) !important; }
+        .bg-card-reminder { background: linear-gradient(135deg, #312e81 0%, #4338ca 100%) !important; }
         .medal-gradient { background: linear-gradient(to right, #f59e0b, #ea580c) !important; color: white !important; }
         .history-gradient { background: linear-gradient(to bottom right, #6366f1, #9333ea) !important; color: white !important; }
         .fund-gradient { background: linear-gradient(to bottom right, #334155, #0f172a) !important; color: white !important; }
@@ -103,6 +104,7 @@
             <button @click="logout" class="w-9 h-9 rounded-full bg-white flex items-center justify-center text-slate-400 shadow-sm border border-slate-200"><i class="fa-solid fa-power-off text-sm"></i></button>
         </header>
 
+        <!-- 首頁分頁 -->
         <div v-if="currPage === 'dashboard'" class="dashboard-wrapper fade-in">
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
                 <div class="horizontal-scroll px-6 mb-2">
@@ -184,12 +186,35 @@
             </div>
         </div>
 
+        <!-- 排班分頁 -->
         <div v-if="currPage === 'schedule'" class="dashboard-wrapper fade-in">
+            <!-- FIX: 移除參與人數，只顯示一週內的提醒任務 -->
             <div class="cards-section" :class="cardsExpanded ? 'expanded' : 'collapsed'">
-                <div class="horizontal-scroll px-6 mb-2">
-                    <div class="bank-card bg-card-blue">
-                        <div class="top"><div class="flex justify-between items-start mb-2 opacity-80 text-[12px] font-bold uppercase tracking-widest">本月排班統計 <i class="fa-solid fa-calendar-check text-lg"></i></div><div class="flex items-baseline gap-1 mb-6"><h3 class="text-5xl font-num tracking-tighter">{{ userData['m' + (new Date().getMonth()+1)] || 0 }}</h3><span class="text-sm font-bold opacity-80">小時</span></div></div>
-                        <div class="grid grid-cols-2 border-t border-white/20 pt-4 pb-1"><div class="border-r border-white/10 text-left pl-1"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">班表狀態</p><p class="text-[15px] font-bold uppercase">已發佈</p></div><div class="text-left pl-6"><p class="text-[9px] opacity-60 font-bold uppercase mb-1">次月登記</p><p class="text-[15px] font-bold">開放中</p></div></div>
+                <div class="px-6 mb-2">
+                    <div class="bank-card bg-card-reminder !w-full !min-height-[180px] flex flex-col justify-center relative">
+                        <div class="flex items-center gap-5">
+                            <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
+                                <i class="fa-solid fa-bell-concierge text-2xl text-indigo-200"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-[10px] opacity-60 font-black tracking-widest uppercase mb-2">登記提醒任務</p>
+                                
+                                <div v-if="activeReminders.length > 0" class="space-y-3">
+                                    <div v-for="(r, idx) in activeReminders.slice(0, 2)" :key="idx" class="flex items-center justify-between group">
+                                        <div class="flex items-baseline gap-3">
+                                            <span class="text-xl font-num">{{ r.dateDisplay }}</span>
+                                            <span class="text-sm font-bold opacity-90 truncate max-w-[150px]">{{ r.label }}</span>
+                                        </div>
+                                        <span class="text-[10px] font-black bg-indigo-500/50 border border-white/10 px-2 py-1 rounded-lg">
+                                            {{ getTimeDistanceLabel(r.fullDate) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div v-else class="py-2">
+                                    <p class="text-sm font-bold text-indigo-200/60 italic">本週無任何已登記的項目</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -205,6 +230,7 @@
 
             <div class="slides-section">
                 <div class="content-slider" ref="scheduleSlider" @scroll="onScheduleSliderScroll">
+                    <!-- 登記排班分頁 -->
                     <div class="slide-page" @scroll="onPageScroll($event, 0)">
                         <div class="pt-4 pb-10">
                             <div class="flex justify-between items-center mb-4 px-1">
@@ -222,12 +248,17 @@
                                             <p v-else class="text-[13px] font-bold text-slate-300 italic">{{ isPastDate(day.fullDate) ? '已過期' : '尚未登記' }}</p>
                                         </div>
                                     </div>
-                                    <div><div v-if="isMyShift(day.fullDate)" class="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center"><i class="fa-solid fa-trash-can text-[12px]"></i></div><div v-else-if="!isPastDate(day.fullDate)" class="w-8 h-8 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center border border-dashed border-slate-200"><i class="fa-solid fa-plus text-[10px]"></i></div></div>
+                                    <div>
+                                        <!-- FIX: 刪除排班按鈕邏輯修正 -->
+                                        <div v-if="isMyShift(day.fullDate)" @click.stop="openDeleteShiftModal(day)" class="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center cursor-pointer active:scale-95 transition-transform"><i class="fa-solid fa-trash-can text-[12px]"></i></div>
+                                        <div v-else-if="!isPastDate(day.fullDate)" class="w-8 h-8 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center border border-dashed border-slate-200 pointer-events-none"><i class="fa-solid fa-plus text-[10px]"></i></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
+                    <!-- 排班總覽分頁 -->
                     <div class="slide-page" @scroll="onPageScroll($event, 1)">
                         <div class="pt-4 pb-10">
                             <div class="flex justify-between items-center mb-6 px-1">
@@ -245,6 +276,7 @@
                         </div>
                     </div>
 
+                    <!-- 公差登記分頁 -->
                     <div class="slide-page" @scroll="onPageScroll($event, 2)">
                         <div class="pt-4 pb-10">
                             <div class="flex justify-between items-center mb-6 px-1">
@@ -276,6 +308,7 @@
                         </div>
                     </div>
 
+                    <!-- 會議登記分頁 -->
                     <div class="slide-page" @scroll="onPageScroll($event, 3)">
                         <div class="pt-4 pb-10">
                             <div class="flex justify-between items-center mb-6 px-1">
@@ -321,7 +354,7 @@
             </div>
         </div>
 
-        <!-- 名單面板 -->
+        <!-- 各種底層 Modal -->
         <div class="bottom-sheet-overlay" :class="{ active: isDetailedListModalOpen }" @click="isDetailedListModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isDetailedListModalOpen }" style="padding-top: 20px;">
             <div class="flex justify-between items-center mb-6 px-1">
@@ -352,7 +385,7 @@
             </div>
         </div>
 
-        <!-- 管理員單人金額拆解調整 -->
+        <!-- 管理員金額調整 Modal -->
         <div class="bottom-sheet-overlay" :class="{ active: isAdminPriceEditOpen }" @click="isAdminPriceEditOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isAdminPriceEditOpen }">
             <div class="flex justify-between items-center mb-6">
@@ -361,7 +394,6 @@
             </div>
             <div class="space-y-4 max-h-[60vh] overflow-y-auto pb-6 pr-1">
                 <div class="space-y-3">
-                    <!-- 本人 -->
                     <div class="p-3 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between">
                         <span class="text-sm font-black text-slate-600">本人 ({{ editingReg?.userName }})</span>
                         <div class="flex items-center gap-2">
@@ -369,7 +401,6 @@
                             <input v-model="adminBreakdown.self" type="number" class="w-24 p-2 bg-white border border-slate-200 rounded-lg font-num text-center">
                         </div>
                     </div>
-                    <!-- 大人 -->
                     <div v-for="(val, idx) in adminBreakdown.adults" :key="'a'+idx" class="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-center justify-between">
                         <span class="text-sm font-black text-indigo-600">攜伴成人 {{ idx + 1 }}</span>
                         <div class="flex items-center gap-2">
@@ -377,7 +408,6 @@
                             <input v-model="adminBreakdown.adults[idx]" type="number" class="w-24 p-2 bg-white border border-indigo-200 rounded-lg font-num text-center">
                         </div>
                     </div>
-                    <!-- 小孩 -->
                     <div v-for="(val, idx) in adminBreakdown.children" :key="'c'+idx" class="p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex items-center justify-between">
                         <span class="text-sm font-black text-emerald-600">攜伴小孩 {{ idx + 1 }}</span>
                         <div class="flex items-center gap-2">
@@ -400,6 +430,7 @@
             </div>
         </div>
 
+        <!-- 發佈任務 Modal -->
         <div class="bottom-sheet-overlay" :class="{ active: isPostModalOpen }" @click="isPostModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isPostModalOpen }">
             <div class="mb-6"><h4 class="text-xl font-black text-slate-800">發佈 {{ postType === 'duty' ? '公差任務' : '會議項目' }}</h4></div>
@@ -411,6 +442,7 @@
             </div>
         </div>
 
+        <!-- 會議登記填寫 Modal -->
         <div class="bottom-sheet-overlay" :class="{ active: isMeetingRegModalOpen }" @click="isMeetingRegModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isMeetingRegModalOpen }">
             <div class="mb-6"><h4 class="text-xl font-black text-slate-800">{{ currentTask?.title }}</h4><p class="text-xs font-bold text-slate-400">請確認您的出席資訊</p></div>
@@ -421,6 +453,7 @@
             </div>
         </div>
 
+        <!-- 排班登記 Modal -->
         <div class="bottom-sheet-overlay" :class="{ active: isShiftModalOpen }" @click="closeShiftModal"></div>
         <div class="bottom-sheet" :class="{ active: isShiftModalOpen }">
             <div class="flex justify-between items-center mb-6"><div><h4 class="text-xl font-black text-slate-800">{{ selectedDay?.date }} {{ selectedDay?.weekday }}</h4><p class="text-xs font-bold text-blue-600 uppercase">Select Service Hours</p></div><button @click="resetShiftSelection" class="text-xs font-black bg-slate-100 text-slate-500 px-4 py-2 rounded-full">重設時間</button></div>
@@ -429,18 +462,39 @@
             <button @click="confirmShift" :disabled="!tempStartTime || !tempEndTime" class="w-full py-4 rounded-2xl bg-blue-600 text-white font-black text-lg shadow-lg disabled:opacity-30">確認登記</button>
         </div>
 
-        <div class="bottom-sheet-overlay" :class="{ active: isDeleteModalOpen }" @click="isDeleteModalOpen = false"></div>
-        <div class="bottom-sheet" :class="{ active: isDeleteModalOpen }">
-            <div class="text-center mb-8"><div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa-solid fa-trash-can"></i></div><h4 class="text-xl font-black text-slate-800">確定要刪除排班？</h4><p class="text-sm font-bold text-slate-400 mt-1">您已登記於 {{ selectedDay?.date }} 日 {{ myExistShift?.start }}-{{ myExistShift?.end }}</p></div>
-            <div class="space-y-3"><button @click="deleteShift" class="w-full py-4 rounded-2xl bg-red-500 text-white font-black text-lg">刪除登記</button><button @click="isDeleteModalOpen = false" class="w-full py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-lg">暫時不要</button></div>
-        </div>
-
+        <!-- 刪除公差/會議任務確認 Modal -->
         <div class="bottom-sheet-overlay" :class="{ active: isTaskDeleteModalOpen }" @click="isTaskDeleteModalOpen = false"></div>
         <div class="bottom-sheet" :class="{ active: isTaskDeleteModalOpen }">
-            <div class="text-center mb-8"><div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fa-solid fa-trash-can"></i></div><h4 class="text-xl font-black text-slate-800">確定要刪除此項目？</h4><p class="text-sm font-bold text-slate-400 mt-1">「{{ itemToDelete?.title }}」將會被永久移除</p></div>
-            <div class="space-y-3"><button @click="handleDeleteTask" class="w-full py-4 rounded-2xl bg-red-500 text-white font-black text-lg">確認刪除</button><button @click="isTaskDeleteModalOpen = false" class="w-full py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-lg">暫時不要</button></div>
+            <div class="text-center py-4">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-trash-can text-2xl text-red-500"></i>
+                </div>
+                <h4 class="text-xl font-black text-slate-800 mb-2">確認刪除任務？</h4>
+                <p class="text-sm font-bold text-slate-400 mb-8">「{{ itemToDelete?.title }}」將被永久刪除，所有登記紀錄也會一併移除</p>
+                <div class="flex gap-3">
+                    <button @click="isTaskDeleteModalOpen = false" class="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm">取消</button>
+                    <button @click="handleDeleteTask" class="flex-1 py-4 rounded-2xl bg-red-500 text-white font-black text-sm shadow-lg shadow-red-200 active:scale-95 transition-transform">確認刪除</button>
+                </div>
+            </div>
         </div>
 
+        <!-- FIX: 獨立的刪除排班確認 Modal -->
+        <div class="bottom-sheet-overlay" :class="{ active: isDeleteShiftModalOpen }" @click="isDeleteShiftModalOpen = false"></div>
+        <div class="bottom-sheet" :class="{ active: isDeleteShiftModalOpen }">
+            <div class="text-center py-4">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-trash-can text-2xl text-red-500"></i>
+                </div>
+                <h4 class="text-xl font-black text-slate-800 mb-2">確認取消排班？</h4>
+                <p class="text-sm font-bold text-slate-400 mb-8">{{ selectedDay?.fullDate }} {{ selectedDay?.weekday }} 的協勤排班將被移除</p>
+                <div class="flex gap-3">
+                    <button @click="isDeleteShiftModalOpen = false" class="flex-1 py-4 rounded-2xl bg-slate-100 text-slate-500 font-black text-sm">保留排班</button>
+                    <button @click="deleteShift" class="flex-1 py-4 rounded-2xl bg-red-500 text-white font-black text-sm shadow-lg shadow-red-200 active:scale-95 transition-transform">確認取消</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部導覽列 -->
         <nav :style="{ paddingBottom:'var(--safe-bottom)', height:'calc(75px + var(--safe-bottom))' }" class="fixed bottom-0 left-0 right-0 border-t border-slate-200 z-50 bg-white/95 backdrop-blur-md" style="max-width:450px; left:50%; transform:translateX(-50%); width:100%;">
             <div class="flex justify-around items-center h-full px-4">
                 <div @click="currPage='dashboard';scrollToTab(0)" :class="currPage === 'dashboard' ? 'text-blue-600' : 'text-slate-300'" class="nav-item cursor-pointer"><i class="fa-solid fa-house-chimney text-xl"></i><span class="text-[13px] font-black mt-1">首頁</span></div>
@@ -461,6 +515,17 @@
     const fireApp = initializeApp(firebaseConfig);
     const db = getFirestore(fireApp);
     const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+    // FIX: 本地日期格式化，避免 toISOString() 的 UTC 時區問題
+    const toLocalDateStr = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+
+    // FIX: 取得今天的本地日期字串（不用硬編碼）
+    const getTodayStr = () => toLocalDateStr(new Date());
 
     createApp({
         setup() {
@@ -487,6 +552,8 @@
             
             const isShiftModalOpen = ref(false);
             const isDeleteModalOpen = ref(false);
+            // FIX: 新增獨立的刪除排班 modal
+            const isDeleteShiftModalOpen = ref(false);
             const isPostModalOpen = ref(false);
             const isMeetingRegModalOpen = ref(false);
             const isDetailedListModalOpen = ref(false);
@@ -498,8 +565,6 @@
             const itemToDelete = ref(null);
             const deleteTargetType = ref('duty');
             const editingReg = ref(null);
-            
-            // 管理員拆解金額專用狀態
             const adminBreakdown = ref({ self: 0, adults: [], children: [] });
 
             const tempStartTime = ref(null);
@@ -511,48 +576,163 @@
 
             const userData = computed(() => members.value.find(m => m.姓名 === loginUserName.value) || {});
 
+            // FIX: 提醒卡顯示「一週內」的項目（不限未來，今天 ± 7天內）
+            const activeReminders = computed(() => {
+                if (!loginUserName.value) return [];
+                const list = [];
+                const todayStr = getTodayStr();
+                // 計算7天後的日期字串
+                const d7 = new Date();
+                d7.setDate(d7.getDate() + 7);
+                const weekLaterStr = toLocalDateStr(d7);
+                
+                // 抓取排班（今天到7天後）
+                Object.keys(userShifts.value).forEach(date => {
+                    if (date >= todayStr && date <= weekLaterStr) {
+                        const myShift = userShifts.value[date].find(s => s.name === loginUserName.value);
+                        if (myShift) {
+                            list.push({
+                                fullDate: date,
+                                dateDisplay: `${date.split('-')[1]}/${date.split('-')[2]}`,
+                                label: '排班協勤',
+                                timestamp: new Date(date + "T" + myShift.start + ":00:00")
+                            });
+                        }
+                    }
+                });
+
+                // 抓取公差與會議（今天到7天後）
+                registrations.value.forEach(reg => {
+                    if (reg.userName === loginUserName.value && reg.status !== '請假') {
+                        const taskList = reg.type === 'duty' ? officialTasks.value : meetingTasks.value;
+                        const task = taskList.find(t => t.id === reg.taskId);
+                        if (task && task.date >= todayStr && task.date <= weekLaterStr) {
+                            list.push({
+                                fullDate: task.date,
+                                dateDisplay: `${task.date.split('-')[1]}/${task.date.split('-')[2]}`,
+                                label: task.title,
+                                timestamp: new Date(task.date + "T" + task.startTime + ":00")
+                            });
+                        }
+                    }
+                });
+
+                return list.sort((a, b) => a.timestamp - b.timestamp);
+            });
+
+            // FIX: 距離時間文字（用本地日期）
+            const getTimeDistanceLabel = (dateStr) => {
+                const todayStr = getTodayStr();
+                if (dateStr === todayStr) return "今天";
+                const d1 = new Date(todayStr + "T00:00:00");
+                const d2 = new Date(dateStr + "T00:00:00");
+                const diff = Math.round((d2 - d1) / 864e5);
+                if (diff === 1) return "明天";
+                if (diff > 1) return `${diff}天後`;
+                return "進行中";
+            };
+
             const calendarTitle = computed(() => `${currentCalendarDate.value.getFullYear()} 年 ${currentCalendarDate.value.getMonth() + 1} 月`);
             const changeCalendarMonth = (dir) => { const d = new Date(currentCalendarDate.value); d.setMonth(d.getMonth() + dir); currentCalendarDate.value = d; };
+            
+            // FIX: 使用本地日期格式，避免 UTC 轉換問題
             const calendarCells = computed(() => {
                 const year = currentCalendarDate.value.getFullYear(); const month = currentCalendarDate.value.getMonth();
                 const firstDay = new Date(year, month, 1); const lastDay = new Date(year, month + 1, 0);
                 let startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
                 const cells = []; const prevLastDay = new Date(year, month, 0).getDate();
-                for (let i = startDay - 1; i >= 0; i--) { const d = new Date(year, month - 1, prevLastDay - i); cells.push({ day: d.getDate(), fullDate: d.toISOString().split('T')[0], currentMonth: false }); }
-                const todayStr = new Date().toISOString().split('T')[0];
-                for (let i = 1; i <= lastDay.getDate(); i++) { const d = new Date(year, month, i); const ds = d.toISOString().split('T')[0]; cells.push({ day: i, fullDate: ds, currentMonth: true, isToday: ds === todayStr }); }
-                const total = cells.length; for (let i = 1; i <= (42 - total); i++) { const d = new Date(year, month + 1, i); cells.push({ day: d.getDate(), fullDate: d.toISOString().split('T')[0], currentMonth: false }); }
+                const todayStr = getTodayStr();
+                for (let i = startDay - 1; i >= 0; i--) { const d = new Date(year, month - 1, prevLastDay - i); cells.push({ day: d.getDate(), fullDate: toLocalDateStr(d), currentMonth: false }); }
+                for (let i = 1; i <= lastDay.getDate(); i++) { const d = new Date(year, month, i); const ds = toLocalDateStr(d); cells.push({ day: i, fullDate: ds, currentMonth: true, isToday: ds === todayStr }); }
+                const total = cells.length; for (let i = 1; i <= (42 - total); i++) { const d = new Date(year, month + 1, i); cells.push({ day: d.getDate(), fullDate: toLocalDateStr(d), currentMonth: false }); }
                 return cells;
             });
 
             const getShiftsForCell = (date) => userShifts.value[date] || [];
             const getShiftsCount = (date) => (userShifts.value[date] || []).length;
             const myExistShift = computed(() => (userShifts.value[selectedDay.value?.fullDate] || []).find(s => s.name === userData.value.姓名));
-            const isPastDate = (fullDate) => { const today = new Date(); today.setHours(0, 0, 0, 0); return new Date(fullDate) < today; };
+            
+            // FIX: isPastDate 使用本地日期比較，今天不算過期
+            const isPastDate = (fullDate) => {
+                const todayStr = getTodayStr();
+                return fullDate < todayStr;
+            };
+            
             const isHourDisabled = (h) => tempStartTime.value && !tempEndTime.value ? parseInt(h) < parseInt(tempStartTime.value) : false;
             const isMyShift = (date) => (userShifts.value[date] || []).some(s => s.name === userData.value?.姓名);
-            const openShiftModal = (day) => { if (isPastDate(day.fullDate)) return; selectedDay.value = day; if (isMyShift(day.fullDate)) isDeleteModalOpen.value = true; else { resetShiftSelection(); isShiftModalOpen.value = true; } };
+            
+            // FIX: openShiftModal 修正 - 點垃圾桶走 deleteShiftModal，點其他走 shiftModal
+            const openShiftModal = (day) => { 
+                if (isPastDate(day.fullDate)) return; 
+                selectedDay.value = day; 
+                if (isMyShift(day.fullDate)) {
+                    // 有排班：走刪除流程（由垃圾桶按鈕觸發，這裡不再自動跳刪除）
+                    // 直接開登記 modal，讓使用者點垃圾桶刪除
+                    return;
+                } else { 
+                    resetShiftSelection(); 
+                    isShiftModalOpen.value = true; 
+                } 
+            };
+
+            // FIX: 獨立的刪除排班 modal 開啟函式
+            const openDeleteShiftModal = (day) => {
+                selectedDay.value = day;
+                isDeleteShiftModalOpen.value = true;
+            };
+
             const selectHour = (h) => { if (h === tempStartTime.value) { resetShiftSelection(); return; } if (h === tempEndTime.value) { tempEndTime.value = null; return; } if (!tempStartTime.value) tempStartTime.value = h; else if (!tempEndTime.value) { if (parseInt(h) > parseInt(tempStartTime.value)) tempEndTime.value = h; else tempStartTime.value = h; } else { tempStartTime.value = h; tempEndTime.value = null; } };
             const confirmShift = async () => { if (tempStartTime.value && tempEndTime.value && selectedDay.value) { try { await addDoc(collection(db, "shifts"), { name: userData.value.姓名, start: tempStartTime.value, end: tempEndTime.value, date: selectedDay.value.fullDate, timestamp: new Date() }); closeShiftModal(); } catch (e) { alert("登記失敗"); } } };
-            const deleteShift = async () => { try { const q = query(collection(db, "shifts"), where("date", "==", selectedDay.value.fullDate), where("name", "==", userData.value.姓名)); const snap = await getDocs(q); snap.forEach(async (d) => await deleteDoc(doc(db, "shifts", d.id))); isDeleteModalOpen.value = false; } catch (e) { alert("刪除失敗"); } };
+            
+            // FIX: deleteShift 修正，使用 selectedDay 的 fullDate，關閉正確的 modal
+            const deleteShift = async () => { 
+                try { 
+                    const q = query(collection(db, "shifts"), where("date", "==", selectedDay.value.fullDate), where("name", "==", userData.value.姓名)); 
+                    const snap = await getDocs(q); 
+                    const deletePromises = [];
+                    snap.forEach((d) => deletePromises.push(deleteDoc(doc(db, "shifts", d.id)))); 
+                    await Promise.all(deletePromises);
+                    isDeleteShiftModalOpen.value = false; 
+                } catch (e) { 
+                    alert("刪除失敗"); 
+                } 
+            };
+            
             const resetShiftSelection = () => { tempStartTime.value = null; tempEndTime.value = null; };
             const closeShiftModal = () => { isShiftModalOpen.value = false; };
             const hasShift = (date) => (userShifts.value[date] || []).length > 0;
             const getWeekday = (dateStr) => { if(!dateStr) return ''; const w = ['週日','週一','週二','週三','週四','週五','週六']; return w[new Date(dateStr).getDay()]; };
 
+            // FIX: weekDates 使用本地日期格式，解決 toISOString UTC 時區問題
             const weekDates = computed(() => {
-                const start = new Date(currentWeekStart.value); const dayOfWeek = start.getDay(); 
+                const start = new Date(currentWeekStart.value); 
+                const dayOfWeek = start.getDay(); 
                 const diff = start.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-                const monday = new Date(start.setDate(diff));
-                return Array.from({ length: 7 }, (_, i) => { const d = new Date(monday); d.setDate(monday.getDate() + i); const ds = d.toISOString().split('T')[0]; return { fullDate: ds, date: d.getDate(), weekday: ['週一','週二','週三','週四','週五','週六','週日'][i], isToday: new Date().toISOString().split('T')[0] === ds, isWeekend: i >= 5 }; });
+                const monday = new Date(start);
+                monday.setDate(diff);
+                const todayStr = getTodayStr();
+                return Array.from({ length: 7 }, (_, i) => { 
+                    const d = new Date(monday); 
+                    d.setDate(monday.getDate() + i); 
+                    const ds = toLocalDateStr(d); 
+                    return { 
+                        fullDate: ds, 
+                        date: d.getDate(), 
+                        weekday: ['週一','週二','週三','週四','週五','週六','週日'][i], 
+                        isToday: todayStr === ds, 
+                        isWeekend: i >= 5 
+                    }; 
+                });
             });
+            
             const currentWeekRangeText = computed(() => weekDates.value.length === 0 ? '' : `${weekDates.value[0].fullDate.replace(/-/g, '/')} - ${weekDates.value[6].fullDate.replace(/-/g, '/')}`);
             const changeWeek = (dir) => { const nd = new Date(currentWeekStart.value); nd.setDate(nd.getDate() + (dir * 7)); currentWeekStart.value = nd; };
 
-            const isExpired = (dateStr) => { const d = new Date(dateStr); d.setHours(23,59,59); return d < new Date(); };
+            const isExpired = (dateStr) => { const d = new Date(dateStr + "T23:59:59"); return d < new Date(); };
             const filterOldTasks = (taskList) => {
                 const twoMonthsAgo = new Date(); twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-                return taskList.filter(t => new Date(t.date) >= twoMonthsAgo).sort((a,b) => {
+                const twoMonthsAgoStr = toLocalDateStr(twoMonthsAgo);
+                return taskList.filter(t => t.date >= twoMonthsAgoStr).sort((a,b) => {
                     const aExp = isExpired(a.date); const bExp = isExpired(b.date);
                     if (aExp !== bExp) return aExp ? 1 : -1;
                     return new Date(a.date) - new Date(b.date);
@@ -563,7 +743,7 @@
 
             const openPostTaskModal = (type) => { 
                 postType.value = type; 
-                newTask.value = { title:'', date: new Date().toISOString().split('T')[0], startTime:'09:00', endTime:'12:00', location:'', note:'', quota: type==='duty' ? 2 : 99, category: '一般會議', priceAdult: 0, priceChild: 0 }; 
+                newTask.value = { title:'', date: getTodayStr(), startTime:'09:00', endTime:'12:00', location:'', note:'', quota: type==='duty' ? 2 : 99, category: '一般會議', priceAdult: 0, priceChild: 0 }; 
                 isPostModalOpen.value = true; 
             };
             const handlePostTask = async () => { 
@@ -619,18 +799,14 @@
             });
 
             const getDetailedRegs = (taskId) => registrations.value.filter(r => r.taskId === taskId);
-            
-            // 計算原本系統的金額
             const calculateBasePrice = (reg) => {
                 if (!reg || reg.status !== '出席' || !currentTask.value) return 0;
-                // 如果有 breakdown 則用 breakdown 計算
                 if (reg.breakdown) {
                     let sum = Number(reg.breakdown.self) || 0;
                     reg.breakdown.adults.forEach(v => sum += Number(v));
                     reg.breakdown.children.forEach(v => sum += Number(v));
                     return sum;
                 }
-                // 否則用舊的邏輯
                 const pAdult = Number(currentTask.value.priceAdult) || 0;
                 const pChild = Number(currentTask.value.priceChild) || 0;
                 return (reg.plusAdult * pAdult) + (reg.plusChild * pChild);
@@ -638,14 +814,8 @@
 
             const getMeetingSummary = (taskId) => {
                 const regs = registrations.value.filter(r => r.taskId === taskId);
-                const task = meetingTasks.value.find(t => t.id === taskId);
                 let totalCash = 0;
-                regs.forEach(r => {
-                    if (r.status === '出席') {
-                        if (r.finalPrice !== undefined) totalCash += Number(r.finalPrice);
-                        else totalCash += calculateBasePrice(r);
-                    }
-                });
+                regs.forEach(r => { if (r.status === '出席') { if (r.finalPrice !== undefined) totalCash += Number(r.finalPrice); else totalCash += calculateBasePrice(r); } });
                 return {
                     present: regs.filter(r => r.status === '出席').length,
                     absent: regs.filter(r => r.status === '請假').length,
@@ -657,22 +827,14 @@
                 };
             };
 
-            // 管理員開啟詳細調整面板
             const openAdminPriceEdit = (reg) => {
                 if (!isAdmin.value) return;
                 editingReg.value = reg;
-                
-                if (reg.breakdown) {
-                    adminBreakdown.value = JSON.parse(JSON.stringify(reg.breakdown));
-                } else {
-                    // 初始化 breakdown
+                if (reg.breakdown) { adminBreakdown.value = JSON.parse(JSON.stringify(reg.breakdown)); } 
+                else {
                     const pA = Number(currentTask.value.priceAdult) || 0;
                     const pC = Number(currentTask.value.priceChild) || 0;
-                    adminBreakdown.value = {
-                        self: 0,
-                        adults: Array(Number(reg.plusAdult)).fill(pA),
-                        children: Array(Number(reg.plusChild)).fill(pC)
-                    };
+                    adminBreakdown.value = { self: 0, adults: Array(Number(reg.plusAdult)).fill(pA), children: Array(Number(reg.plusChild)).fill(pC) };
                 }
                 isAdminPriceEditOpen.value = true;
             };
@@ -680,11 +842,7 @@
             const resetAdminBreakdown = (isFree) => {
                 const pA = isFree ? 0 : (Number(currentTask.value.priceAdult) || 0);
                 const pC = isFree ? 0 : (Number(currentTask.value.priceChild) || 0);
-                adminBreakdown.value = {
-                    self: 0,
-                    adults: Array(Number(editingReg.value.plusAdult)).fill(pA),
-                    children: Array(Number(editingReg.value.plusChild)).fill(pC)
-                };
+                adminBreakdown.value = { self: 0, adults: Array(Number(editingReg.value.plusAdult)).fill(pA), children: Array(Number(editingReg.value.plusChild)).fill(pC) };
             };
 
             const computedAdminTotal = computed(() => {
@@ -695,13 +853,7 @@
             });
 
             const submitAdminPriceEdit = async () => {
-                try {
-                    await updateDoc(doc(db, "registrations", editingReg.value.id), { 
-                        breakdown: adminBreakdown.value,
-                        finalPrice: computedAdminTotal.value 
-                    });
-                    isAdminPriceEditOpen.value = false;
-                } catch (e) { alert("調整失敗"); }
+                try { await updateDoc(doc(db, "registrations", editingReg.value.id), { breakdown: adminBreakdown.value, finalPrice: computedAdminTotal.value }); isAdminPriceEditOpen.value = false; } catch (e) { alert("調整失敗"); }
             };
 
             const getCategoryClass = (cat) => {
@@ -735,13 +887,19 @@
             const handleLogin = () => { const user = members.value.find(m => m.姓名 === loginForm.value.name && String(m.password) === String(loginForm.value.pass)); if (user) { loginUserName.value = user.姓名; currPage.value = 'dashboard'; } else { errMsg.value = "安全密碼錯誤"; } };
             const logout = () => { currPage.value='login'; loginUserName.value=''; loginForm.value.pass=''; };
             const cleanValue = (v) => v ? String(v).replace(/[^0-9.]/g,'') : '0';
-            const calculateDays = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; return Math.max(0,Math.ceil((new Date(s)-new Date())/864e5)); };
+            const calculateDays = (s) => { if (!s||s==='----/--/--'||s==='無') return '--'; const todayStr = getTodayStr(); return Math.max(0,Math.ceil((new Date(s)-new Date(todayStr))/864e5)); };
             const scrollToTab = (index) => { if (!slider.value) return; slider.value.scrollTo({ left: slider.value.clientWidth * index, behavior:'smooth' }); activeDashboardTab.value = dashboardTabs[index].id; syncTabScroll(index, tabsScrollRef.value); };
             const scrollToScheduleTab = (index) => { if (!scheduleSlider.value) return; scheduleSlider.value.scrollTo({ left: scheduleSlider.value.clientWidth * index, behavior:'smooth' }); activeScheduleTab.value = scheduleTabs[index].id; syncTabScroll(index, scheduleTabsScrollRef.value); };
             const syncTabScroll = (index, container) => { nextTick(() => { if (!container) return; const tabEls = container.querySelectorAll('.tab-item'); if (tabEls[index]) tabEls[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }); }); };
             const onSliderScroll = () => { if (!slider.value) return; const index = Math.round(slider.value.scrollLeft / slider.value.clientWidth); if (dashboardTabs[index]) { activeDashboardTab.value = dashboardTabs[index].id; syncTabScroll(index, tabsScrollRef.value); } };
             const onScheduleSliderScroll = () => { if (!scheduleSlider.value) return; const index = Math.round(scheduleSlider.value.scrollLeft / scheduleSlider.value.clientWidth); if (scheduleTabs[index]) { activeScheduleTab.value = scheduleTabs[index].id; syncTabScroll(index, scheduleTabsScrollRef.value); } };
-            const onPageScroll = (event, idx) => { if (event.target.scrollTop > 30) cardsExpanded.value = false; else if (event.target.scrollTop === 0) cardsExpanded.value = true; };
+            
+            // FIX: 提高收起小卡的門檻到 80px，避免輕微滑動就收起
+            const onPageScroll = (event, idx) => { 
+                if (event.target.scrollTop > 80) cardsExpanded.value = false; 
+                else if (event.target.scrollTop === 0) cardsExpanded.value = true; 
+            };
+            
             const filterByGroup = (g) => members.value.filter(m=>m.duty_group===g);
             const getGroupTotal = (g) => filterByGroup(g).reduce((s,m)=>s+(Number(m.duty_count)||0),0);
             const formatNumber = (v) => v ? Number(v).toLocaleString() : '0';
@@ -751,14 +909,15 @@
 
             return {
                 isAdmin, currPage, activeDashboardTab, activeScheduleTab, cardsExpanded, dashboardTabs, scheduleTabs, members, loginForm, userData, errMsg, caseTypes, medalList, slider, scheduleSlider, tabsScrollRef, scheduleTabsScrollRef, totalYearlyHours, sortedMembersList, sortedLoginMembers, sortedTeams, rotationDuty, sortedCashHistory, medalCount,
-                currentWeekStart, weekDates, currentWeekRangeText, changeWeek, hasShift, isPastDate, hourOptions, isShiftModalOpen, isDeleteModalOpen, selectedDay, tempStartTime, tempEndTime, isHourDisabled, isMyShift, userShifts, myExistShift,
+                currentWeekStart, weekDates, currentWeekRangeText, changeWeek, hasShift, isPastDate, hourOptions, isShiftModalOpen, isDeleteModalOpen, isDeleteShiftModalOpen, selectedDay, tempStartTime, tempEndTime, isHourDisabled, isMyShift, userShifts, myExistShift,
                 currentCalendarDate, calendarTitle, calendarCells, changeCalendarMonth, getShiftsForCell, getShiftsCount, getWeekday,
                 officialTasks, meetingTasks, filteredOfficialTasks, filteredMeetingTasks, isPostModalOpen, postType, newTask, openPostTaskModal, handlePostTask, handleDeleteTask, getTaskRegCount, getTaskParticipants, isUserSignedUp, toggleRegistration,
                 isMeetingRegModalOpen, regForm, openMeetingRegModal, submitMeetingReg, currentTask, getMeetingSummary, getDetailedRegs, getCategoryClass, isExpired, getFillingCount,
                 openDetailedListModal, isDetailedListModalOpen, unfilledMembers, isTaskDeleteModalOpen, itemToDelete, confirmDeleteTask,
-                openShiftModal, selectHour, resetShiftSelection, confirmShift, closeShiftModal, deleteShift,
+                openShiftModal, openDeleteShiftModal, selectHour, resetShiftSelection, confirmShift, closeShiftModal, deleteShift,
                 isAdminPriceEditOpen, editingReg, adminBreakdown, openAdminPriceEdit, submitAdminPriceEdit, calculateBasePrice, computedAdminTotal, resetAdminBreakdown,
-                handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, onSliderScroll, onScheduleSliderScroll, scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours
+                handleLogin, logout, cleanValue, filterByGroup, getGroupTotal, calculateDays, onSliderScroll, onScheduleSliderScroll, scrollToTab, scrollToScheduleTab, onPageScroll, formatNumber, hasMedal, findMedalValue, isUnderHours,
+                activeReminders, getTimeDistanceLabel
             };
         }
     }).mount('#app');
